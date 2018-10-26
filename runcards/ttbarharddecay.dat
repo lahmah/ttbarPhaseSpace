@@ -1,0 +1,45 @@
+(run){
+  % general settings
+  EVENTS 100000;
+  SHERPA_LDADD SherpaMain;
+
+  % model parameters
+  %HARD_DECAYS Off;
+  MI_HANDLER None;
+  FRAGMENTATION Off;
+  SHOWER_GENERATOR None;
+  PDF_LIBRARY None;
+  ME_SIGNAL_GENERATOR Amegic;
+  %ME_SIGNAL_GENERATOR Comix;
+
+  SCALES VAR{sqr(E_CMS)};  
+
+  YFS_MODE 0;
+
+  HARD_DECAYS = 1;
+  HDH_STATUS[6,24,5]=2;
+  HDH_STATUS[-6,-24,-5]=2;
+  HDH_STATUS[-24,-12,11]=2;
+  HDH_STATUS[24,-14,13]=2;
+  %HARD_MASS_SMEARING=0;
+  HARD_SPIN_CORRELATIONS=0;
+}(run)
+
+(isr){
+  PDF_LIBRARY None;
+}(isr)
+
+(beam){
+  % collider setup
+  
+  BEAM_1  11; BEAM_ENERGY_1 500;
+  BEAM_2 -11; BEAM_ENERGY_2 500;
+  
+}(beam)
+
+(processes){
+  %Process 11 -11 -> 6 -6[b];
+  Process 11 -11 -> 6 -6;
+  %DecayOS -6[b] -> -5 -24;
+  End process;
+}(processes)
