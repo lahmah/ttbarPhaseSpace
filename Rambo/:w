@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+import Sherpa
+from rambo import *
+from vec4d import *
+import numpy as np
+from itertools import combinations
+
+### run parameters ############################
+seed = 1234
+N = 1000000 # number of events
+E_CM = 1000.
+nin = 2
+nout = 3
+pT_min = 5.
+
+
+FixMass = False#True#False 
+TopMass = 173
+WMass   = 80
+###############################################
+
+if FixMass:
+    if nout == 2:
+        masses = [TopMass,TopMass]
+    if nout == 3:
+        masses = [TopMass,WMass,0]
+    if nout == 4:
+        masses = [TopMass,0,0,0]
+    if nout == 6:
+        masses = [0,0,0,0,0,0]
+else: # 1 = massiv particle ; 0 = massles particle
+    if nout == 2:
+        masses = [1,1]
+    if nout == 3:
+        masses = [1,1,0]
+    if nout == 4:
+        masses = [1,0,0,0]
+    if nout == 6:
+        masses = [0,0,0,0]
+
+################################################
+
+np.random.seed(seed)
+
+conversion = 0.389379*1e9 # convert to pb
+
+## Initialize Sherpa
+Generator=Sherpa.Sherpa()
+Generator.InitializeTheRun(4, [''.encode('ascii'), ('RUNDATA=../runcards/ttbar'+str(nout)+'.dat').encode('ascii'), 'INIT_ONLY=2'.encode('ascii'), 'OUTPUT=0'.encode('ascii')])
+Process=Sherpa.MEProcess(Generator)
+
+# Incoming flavors must be added first!
+Process.Initialize();
+
+# First argument corresponds to particle index:
+# index 0 corresponds to particle added first, index 1 is the particle added second, and so on...
+Process.SetMomentum(0, E_CM/2, 0., 0., E_CM/2)
+Process.SetMomentum(1, E_CM/2, 0., 0., -E_CM/2)
+
+## Initialize Rambo
+PSGenerator = Rambo(nout, E_CM)
+
+sum_1 = 0.
+sum_2 = 0.
+sum_3 = 0.
+
+
+sum2 = 0.
+N_gen = 0
+N_nan = 0
+N_acc = 0
+last_print = 0
+weights = []
+while N_acc<N:
+    N_gen +=1
+
+    
+
+    momenta,weight = PSGenerator.generate_massive_point(masses,FixMass)
+    
+
+    for i, momentum in enumerate(momenta):
+        Process.SetMomentum(i+2, momentum[0], momentum[1], momentum[2], momentum[3])
+
+    Process.SetMomentum(3, momenta[0][0], momenta[0][1], momenta[0][2], momenta[0][3])
+    Process.SetMomentum(4, momenta[1][0], momenta[1][1], momenta[1][2], momenta[0][3])
+    Process.SetMomentum(2, momenta[2][0], momenta[2][1], momenta[2][2], momenta[0][3])
+
+    me = Process.CSMatrixElement()
+
+
+    cosPhi = [angle(p1, p2) for p1, p2 in combinations(momenta, 2)][0]
+    p = [p for p in momenta]
+    p1 = [p[0].E,p[0].m, p[0].mom3d]
+    p2 = [p[0].E,p[0].m, p[0].mom3d]
+    if np.isnan(me1): 
+        N_gen -= 1
+        N_nan += 1
+        
+        continue
+    N_acc += 1
+    
+    sum_1 += me1*weight
+    sum_2 += me2*weight
+    sum_3 += me3*weight
+
+
+    sum2 += (me1*weight)**2
+
+    weights.append(weight)
+
+    if N_acc%1000 == 0 and N_acc > last_print:
+        print('Event', N_acc,end="\r")
+        last_print = N_acc
+
+
+xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) / N_gen * sum_1 
+xs2 = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) / N_gen * sum_2 
+xs3 = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) / N_gen * sum_3 
+
+
+#sigma_xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) / N_gen * np.sqrt((sum**2-sum2)/N_gen) 
+
+print('xs: ', xs, "pb  +/- " ,)# sigma_xs , "pb = " , sigma_xs/xs*100,' %')
+print('xs: ', xs2, "pb  +/- " )
+print('xs: ', xs3, "pb  +/- " )
+
+
+print("generated events:", N_gen)
+print("accepted events", N_acc)
+print('acceptance rate: ', N_acc/N_gen)
+print('nan detection: ', N_nan)
+
+

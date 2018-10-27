@@ -1,0 +1,16 @@
+ % = general settings; 
+ EVENTS = 2000; 
+ SHERPA_LDADD = SherpaMain; 
+ % = model parameters; 
+ HARD_DECAYS = Off; 
+ MI_HANDLER = None; 
+ FRAGMENTATION = Off; 
+ SHOWER_GENERATOR = None; 
+ PDF_LIBRARY = None; 
+ ME_SIGNAL_GENERATOR = Amegic; 
+ SCALES = VAR{sqr(E_CMS)}; 
+ INIT_ONLY = 2; 
+ OUTPUT = 0; 
+ SHERPA_RUN_PATH = /home/laura/Documents/Masterarbeit/code/ttbarSampler/Rambo
+ SHERPA_CPP_PATH = /home/laura/Documents/Masterarbeit/code/ttbarSampler/Rambo
+ SHERPA_LIB_PATH = /home/laura/Documents/Masterarbeit/code/ttbarSampler/Rambo/Process/Amegic/lib
