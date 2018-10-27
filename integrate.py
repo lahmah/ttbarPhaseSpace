@@ -174,8 +174,15 @@ while N_acc<N:
         print('Event', N_acc,end ="\r")
         last_print = N_acc
 
-xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) / N_gen * sum 
-sigma_xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) / N_gen * np.sqrt((sum**2 - sum2)/N_gen) 
+
+x0 = sum / N_acc
+x00 = sum2 / N_acc
+sigma2 = x00-x0**2
+error = np.sqrt(sigma2/N_acc)
+
+
+xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) *x0
+sigma_xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) *error 
 
     
 print('xs: ', xs, "pb  +/- " , sigma_xs , "pb = " , sigma_xs/xs*100,' %')
