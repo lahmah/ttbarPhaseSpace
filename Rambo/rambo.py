@@ -1,5 +1,7 @@
 import numpy as np
 from math import gamma
+from functools import partial
+from scipy.optimize import newton
 from vec4d import *
 
 def floorToZero(a,N=0):
@@ -11,7 +13,10 @@ class Rambo(object):
         self.nout = nout
         self.Ecms = Ecms
 
-        self.ps_volume = (np.pi/2.)**(nout-1) * Ecms**(2*nout-4)/gamma(nout)/gamma(nout-1)
+        self.ps_volume = (np.pi/2.)**(nout-1) \
+                * Ecms**(2*nout-4) \
+                /gamma(nout)/gamma(nout-1)# \
+                #* (2 * np.pi) **(4-3*nout)
 
     def generate_weight(self):
         return self.ps_volume
@@ -51,35 +56,72 @@ class Rambo(object):
     
         return p
 
-    def generate_massive_point(self,pmasses,FixedMasses=False):
-        p = self.generate_point()
+    def fxi(self,xi):
+        val = 0
+        for i in range(self.nout):
+            val += np.sqrt(self.masses[i]**2+xi**2*self.p[i].E**2)
+        return val -self.Ecms
 
-        masses = pmasses.copy()
-        w = 0
-        nmassiv = 0 
-        if not FixedMasses:
-            for i, m in enumerate(masses):
-                if m == 1:
-                    nmassiv += 1
-                    masses[i] = np.random.random()*p[i].E
-                    w += 1/p[i].E
-
-            w /= nmassiv
-        if w == 0:
-            w = 1
+    def dfxi(self,xi):
+        val = 0
+        for i in range(self.nout):
+            denom = np.sqrt(self.masses[i]**2+xi**2*self.p[i].E**2)
+            val += xi * self.p[i].E**2 / denom
+        return val
 
 
-        Ki_abs = np.array([np.sqrt(p[i].E**2-masses[i]**2) for i in range(self.nout)])
+    def generate_massive_point(self,masses):
+        p = self.generate_point() 
+        self.masses = masses
+        self.p = p
+
+
+        mass_sum = np.sum(masses)
+
+        f = partial(self.fxi)
+        df = partial(self.dfxi)
+
+        xi_0 = np.sqrt(1-(mass_sum / self.Ecms)**2)
+        #print(mass_sum)
+        #print(xi_0)
+
+        #print(self.fxi(xi_0))
+        #print(self.dfxi(xi_0))
+
+
+        Xi = newton(f,xi_0,df)
+
+        #print(Xi)
+
+
+
+
+        #Ki_abs = np.array([np.sqrt(p[i].E**2-masses[i]**2) for i in range(self.nout)])
         
-        Xi = sum(Ki_abs)
-        Xi /= self.Ecms
+        #Xi = sum(Ki_abs)
+        #Xi /= self.Ecms
 
         k = []
+        term1 = 0
+        term2 = 0
+        term3 = 1
+
         for i  in range(self.nout):
             k.append(Mom4D())
             k[i].E = np.sqrt(masses[i]**2+Xi**2*p[i].E**2)
             k[i].mom3d = Xi * p[i].mom3d 
 
+            modulus = np.sqrt( np.sum((k[i].mom3d)**2))
+            
+            term1 += modulus / self.Ecms
+            term2 += modulus**2 / k[i].E
+            term3 *= modulus / k[i].E
+
+        term1 = term1**(2*self.nout-3)
+        term2 = term2**-1
+        WW = self.ps_volume * term1*term2*term3*self.Ecms
+
+        """
         W = self.ps_volume
         W *= Xi**(2*self.nout-3)    
         temp = 0
@@ -88,7 +130,9 @@ class Rambo(object):
             temp += Ki_abs[i]**2/k[i].E
         W /= temp
         W *=self.Ecms
+        """
+        #print(W,WW)
 
-        #W *= w
+        
 
-        return k ,W
+        return k ,WW

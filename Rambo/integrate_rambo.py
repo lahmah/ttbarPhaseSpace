@@ -6,37 +6,30 @@ import numpy as np
 from itertools import combinations
 
 ### run parameters ############################
-seed = 1234
-N = 100000 # number of events
+seed = 1234567
+N = 3000000 # number of events
 E_CM = 1000.
-nin = 2
-nout = 3
+nin = 2 
+nout = 3 
 pT_min = 5.
 
 
-FixMass = True 
-TopMass = 173
+TopMass = 175
 WMass   = 80
 ###############################################
+OUTPUT = str(0)
 
-if FixMass:
-    if nout == 2:
-        masses = [TopMass,TopMass]
-    if nout == 3:
-        masses = [TopMass,WMass,0]
-    if nout == 4:
-        masses = [TopMass,0,0,0]
-    if nout == 6:
-        masses = [0,0,0,0,0,0]
-else: # 1 = massiv particle ; 0 = massles particle
-    if nout == 2:
-        masses = [1,1]
-    if nout == 3:
-        masses = [1,1,0]
-    if nout == 4:
-        masses = [1,0,0,0]
-    if nout == 6:
-        masses = [0,0,0,0]
+
+
+if nout == 2:
+    masses = [TopMass,TopMass]
+if nout == 3:
+    masses = [WMass,TopMass,0]
+
+if nout == 4:
+    masses = [0,TopMass,0,0]
+if nout == 6:
+    masses = [0,0,0,0,0,0]
 
 ################################################
 
@@ -46,7 +39,7 @@ conversion = 0.389379*1e9 # convert to pb
 
 ## Initialize Sherpa
 Generator=Sherpa.Sherpa()
-Generator.InitializeTheRun(4, [''.encode('ascii'), ('RUNDATA=../runcards/ttbar'+str(nout)+'.dat').encode('ascii'), 'INIT_ONLY=2'.encode('ascii'), 'OUTPUT=0'.encode('ascii')])
+Generator.InitializeTheRun(4, [''.encode('ascii'), ('RUNDATA=../runcards/ttbar'+str(nout)+'.dat').encode('ascii'), 'INIT_ONLY=2'.encode('ascii'), ('OUTPUT='+OUTPUT).encode('ascii')])
 Process=Sherpa.MEProcess(Generator)
 
 # Incoming flavors must be added first!
@@ -67,13 +60,13 @@ N_gen = 0
 N_nan = 0
 N_acc = 0
 last_print = 0
-weights = []
+
 while N_acc<N:
     N_gen +=1
 
     
 
-    momenta,weight = PSGenerator.generate_massive_point(masses,FixMass)
+    momenta,weight = PSGenerator.generate_massive_point(masses)
 
     
 
@@ -87,6 +80,9 @@ while N_acc<N:
     
     me = Process.CSMatrixElement()
 
+    if OUTPUT != str(0):
+        print(me)
+        input()
 
     cosPhi = [angle(p1, p2) for p1, p2 in combinations(momenta, 2)][0]
     p = [p for p in momenta]
@@ -103,7 +99,7 @@ while N_acc<N:
   
     sum2 += (me*weight)**2
 
-    weights.append(weight)
+
 
     if N_acc%1000 == 0 and N_acc > last_print:
         print('Event', N_acc,end="\r")

@@ -28,19 +28,21 @@ def export_hepmc(E_CM, data, weights, filename):
             f.write("P 10002 -11 0 0 %e %e 0 4 0 0 -1 0\n" % (-E_CM/2, E_CM/2))
             
             # outgoing particles
+# 6 -> 5 24 ->       5 -13 14
+# -6 -> -5 -24 ->    -5 11 -12
             for j in range(n_out):
                 if j == 0:
-                    pid = 11
+                    pid = 5 
                 elif j == 1:
-                    pid = -13
-                elif j == 2:
-                    pid = 14
-                elif j == 3:
-                    pid = -12
-                elif j == 4:
-                    pid = 5
-                elif j == 5:
                     pid = -5
+                elif j == 2:
+                    pid = -13 
+                elif j == 3:
+                    pid = 14
+                elif j == 4:
+                    pid = 11
+                elif j == 5:
+                    pid = -12
                 
                 E = data[i, 4*j]
                 px = data[i, 4*j+1]
