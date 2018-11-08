@@ -6,6 +6,7 @@ import numpy as np
 from itertools import combinations
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from export_hepmc import export_hepmc
 
 
 import sys
@@ -30,10 +31,10 @@ else:
 
 ### run parameters ############################
 seed = 1234
-N = 10000 # number of events
+N = 100000 # number of events
 E_CM = 1000.
 nin = 2
-nout = 3 
+nout = 2 
 pT_min = 5
 angle_min = np.cos(0.3)
 ###############################################
@@ -88,6 +89,8 @@ W = []
 W1 = []
 W2 = []
 W3 = []
+
+
 while N_acc<N:
     N_gen +=1
 
@@ -102,7 +105,6 @@ while N_acc<N:
 
 
 
-
     if DEBUG:
         print("sum of all Momenta:")
         print(np.sum(momenta))
@@ -111,63 +113,54 @@ while N_acc<N:
             input()
 
 
-
-    #np.save("bla",momenta)
-    #print(weight)
-    #input()
-
-#    momenta, weight = PSGenerator.generate_massive_point(pin, s0, masses)
-  
-    if True:#all([p.pT>pT_min for p in momenta]) and all([angle(p1, p2)<angle_min for p1, p2 in combinations(momenta, 2)]):
-  
+    for i, momentum in enumerate(momenta):
+        Process.SetMomentum(i+2, momentum[0], momentum[1], momentum[2], momentum[3])
         
-        for i, momentum in enumerate(momenta): 
-            Process.SetMomentum(i+2, momentum[0], momentum[1], momentum[2], momentum[3])
-        me = Process.CSMatrixElement()
-     
+    me = Process.CSMatrixElement()
+    
 
-        if np.isnan(me):
-            N_gen -= 1
-            N_nan += 1
-            #print(N_nan,end="\r")
-            continue
+    if np.isnan(me):
+        N_gen -= 1
+        N_nan += 1
+        #print(N_nan,end="\r")
+        continue
 
 
-        if nout == 3:
-            EW.append(momenta[0].E)
+    if nout == 3:
+        EW.append(momenta[0].E)
 
-        if nout == 4:
-            EE.append(momenta[0].E)
-            ENU.append(momenta[1].E)
+    if nout == 4:
+        EE.append(momenta[0].E)
+        ENU.append(momenta[1].E)
 
-        if nout == 3 or nout == 4:
-            ET.append(momenta[-2].E)
-            EB.append(momenta[-1].E)
-            MT.append(momenta[-2].m)
+    if nout == 3 or nout == 4:
+        ET.append(momenta[-2].E)
+        EB.append(momenta[-1].E)
+        MT.append(momenta[-2].m)
 
-        if nout == 6:
-           EE.append(momenta[0].E) 
-           EMU.append(momenta[1].E)
-           MUNU.append(momenta[2].E) 
-           ENU.append(momenta[3].E)
-           EB2.append(momenta[4].E)
-           EB.append(momenta[5].E)
+    if nout == 6:
+       EE.append(momenta[0].E) 
+       EMU.append(momenta[1].E)
+       MUNU.append(momenta[2].E) 
+       ENU.append(momenta[3].E)
+       EB2.append(momenta[4].E)
+       EB.append(momenta[5].E)
 
 
 
 
-        
-        if NOWEIGHTS:
-            W.append(1)
-        else:
-            W.append(weight)
+    
+    if NOWEIGHTS:
+        W.append(1)
+    else:
+        W.append(weight)
 
 
 
 
-        N_acc += 1
-        sum += me*weight
-        sum2 += (me*weight)**2
+    N_acc += 1
+    sum += weight*me
+    sum2 += (weight*me)**2
 
         
     if N_acc%1000 == 0 and N_acc > last_print:
@@ -190,6 +183,26 @@ print("generated events:", N_gen)
 print("accepted events", N_acc)
 print('acceptance rate: ', N_acc/N_gen)
 print('generated nan: ', N_nan)
+
+W1 = np.array(W1)
+W2 = np.array(W2)
+W3 = np.array(W3)
+
+print(np.sum(W1)/N)
+print(np.sum(W2)/N)
+print(np.sum(W3)/N)
+
+print(np.sum(W1*W2)/N)
+print(np.sum(W1*W3)/N)
+print(np.sum(W2*W3)/N)
+print(np.sum(W1*W2*W3)/N)
+
+print(np.sum(W)/N)
+
+
+
+
+#export_hepmc(E_CM, np.array(AllEvents).reshape(N,nout*4), W, "./own.hepmc")
 
 
 
