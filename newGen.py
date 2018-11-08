@@ -54,7 +54,7 @@ class topGenerator (object):
         term2 = term2**-1
         return self.ps_volume * term1*term2*term3*self.Ecms
     
-    def generate_Masses(self,Ecms,*argsv):
+    def generate_Masses(self,Ecms,*argsv,FixedE=False):
         masses = []             
         remainingE = Ecms
         
@@ -76,22 +76,26 @@ class topGenerator (object):
                 id = abs(int(arg)) 
                 m = self.particles.get(id)
                 if isinstance(m,tuple):
-                    if id == 6:
-                        remainingE = 500
+                    if FixedE:
+                        remainingE = Ecms
+                    remainingE = m[0]+10*m[1]
                     rmax = arctan((remainingE**2-m[0]**2)/(m[0]*m[1])) 
+                    rmin = arctan(((m[0]-5)**2-m[0]**2)/(m[0]*m[1])) 
+                    m = (m[0],m[1],rmin)
+
                     r = m[2] + np.random.random()*(rmax-m[2])
                     s = m[0]*m[1]*tan(r)+m[0]*m[0]
                     
                     W *= (rmax-m[2])*((s-m[0]**2)**2+(m[0]*m[1])**2)/(m[0]*m[1])  # inverse breit wigner weight
 
-                    W *=  1./(2.*remainingE*128.*pow(pi,3))*(1.-s/remainingE**2) 
+                    W /= m[0]*m[1]*tan(rmax)+m[0]**2 - (m[0]*m[1]*tan(rmin)+m[0]**2)
+
 
                     m = sqrt(s)        
 
                 remainingE -= m
             masses.append(m)
         return array(masses) , W
-
 
 
     def generate_fourvectors(self,n):

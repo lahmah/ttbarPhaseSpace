@@ -20,10 +20,33 @@ print(ttbar.m)
 print(sum(ttbar.E))
 print(BW_weight)
 
-W = 0
+tt = 0
+ww = 0
+ttww = 0
+tt2 = 0
+wW2 = 0
+ttww2 = 0
+precision = "{:.4f}"
+print("\n\n\n")
 for i in range(1,10000000):
-    ttbar ,BW_weight = gen.generate_ttbar()
-    W += BW_weight
-    print(W/i, " - " ,i,end="\r")
+    ttbar ,ttw = gen.generate_ttbar()
+    W, ww1 = gen.generate_Masses(175,"24")
+    W, ww2 = gen.generate_Masses(175,"24")
 
-print()
+    tt += ttw
+    ww += ww1*ww2
+    ttww += ttw*ww1*ww2
+    tt2 += ttw**2
+    wW2 += (ww1*ww2)**2
+    ttww2 += (ttw*ww1*ww2)**2
+
+    
+    if i % 1000 == 0:
+        print(end="\033[F\033[F\033[F\033[F")
+        print(i)
+        print("tt: ",precision.format(tt/i), "\t-\t", precision.format(np.sqrt((tt2/i-(tt/i)**2)/i)))
+        print("ww: ",precision.format(ww/i), "\t-\t", precision.format(np.sqrt((wW2/i-(ww/i)**2)/i)))
+        print("tw: ",precision.format(ttww/i), "\t-\t", precision.format(np.sqrt((ttww2/i-(ttww/i)**2)/i)))
+
+
+print("\n\n\n\n")
