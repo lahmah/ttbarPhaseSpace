@@ -10,13 +10,17 @@ def floorToZero(a,N=0):
     return int(a*10**N)*10**-N
 
 class topGenerator (object):
-    def __init__(self, nout, Ecms):
+    def __init__(self, nout, Ecms, debug = False):
         self.nout = nout
         self.Ecms = Ecms
+        self.debug = debug
 
         self.ps_volume = (pi/2.)**(nout-1) \
                 * Ecms**(2*nout-4) \
                 /gamma(nout)/gamma(nout-1)# \
+
+
+        self.labsystem = Mom4D([0,0,0,1])
 
         # Particle masses and widths
         MW = 80.38
@@ -78,7 +82,7 @@ class topGenerator (object):
                 if isinstance(m,tuple):
                     if FixedE:
                         remainingE = Ecms
-                    remainingE = m[0]+10*m[1]
+                    remainingE = m[0]+4*m[1]
                     rmax = arctan((remainingE**2-m[0]**2)/(m[0]*m[1])) 
                     rmin = arctan(((m[0]-5)**2-m[0]**2)/(m[0]*m[1])) 
                     m = (m[0],m[1],rmin)
@@ -179,4 +183,160 @@ class topGenerator (object):
 
         return ttbar , BW_weight
 
+    def top_decay(self, pint):
+        Ecms = pint.m
+
+        if self.nout ==3:
+            particles = ("24OS","5OS")
+        else:
+            particles = ("24","5OS")
+
+        masses,BW_weight = self.generate_Masses(Ecms,*particles) 
+
+        p = Mom4D(np.empty((4,2)))
+
+        momentum = Ecms/2 * (1-sum(array(masses)**2)/Ecms**2)
+        s = masses[0]**2-masses[1]**2 
+        p[0,0] = (1+s/Ecms**2) * Ecms/2
+        p[0,1] = (1-s/Ecms**2) * Ecms/2
+
+        theta, phi = np.random.random(2)
+        theta *= pi
+        phi   += 2*pi
+
+        x = sin(theta)*cos(phi)
+        y = sin(theta)*sin(phi)
+        z = cos(theta)
+
+        momentum *= array([x,y,z])
+        p[1:,0] = +momentum
+        p[1:,1] = -momentum
+        
+        if self.debug:
+            print("w,b befor boost:")
+            print(p, " - " , p.m)
+
+
+
+
+        m_rot = self.rotat(pint,self.labsystem)
+        p[:,0] = self.rotat_inv(p[:,0],m_rot)._arr
+        p[:,1] = self.rotat_inv(p[:,1],m_rot)._arr
+        p[:,0] = self.boost(pint,p[:,0])._arr
+        p[:,1] = self.boost(pint,p[:,1])._arr
+
+
+        if self.debug:
+            print("w,b after boost:")
+            print(p, " - " , p.m)
+
+
+        return p,BW_weight
+
+
+
+    def boost(self, q, ph):
+    #                                      _
+    # Boost of a 4-vector ( relative speed q/q(0) ):
+    #
+    # ph is the 4-vector in the rest frame of q
+    # p is the corresponding 4-vector in the lab frame
+    #
+    # INPUT     OUTPUT
+    # q, ph     p
+
+        p = Mom4D()
+    
+        rsq = q.m
+    
+        p.E = (q.E*ph.E+np.dot(q.mom3d, ph.mom3d)) / rsq
+        c1 = (ph.E+p.E) / (rsq+q.E)
+        p.mom3d = ph.mom3d + c1*q.mom3d
+    
+        return p
+    
+    def boost_inv(self, q, p):
+    #                                      _
+    # Boost of a 4-vector ( relative speed q/q(0) ):
+    #
+    # ph is the 4-vector in the rest frame of q
+    # p is the corresponding 4-vector in the lab frame
+    #
+    # INPUT     OUTPUT
+    # q, p      ph
+    
+        ph = Mom4D()
+        rsq = q.m
+    
+        ph.E = q*p/rsq
+        c1 = (p.E+ph.E) / (rsq+q.E)
+        ph.mom3d = p.mom3d - c1*q.mom3d
+    
+        return ph
+
+    def rotat(self, p1, p2):
+    # Rotation of a 4-vector:
+    #
+    #            p1 = rot*p2
+    #
+    # INPUT     OUTPUT
+    #
+    # p1, p2    rot
+
+        rot = np.empty((3, 3))
+        
+        r = np.empty((2, 3, 3))
+        pm = np.empty(2)
+        sp = np.empty(2)
+        cp = np.empty(2)
+        st = np.empty(2)
+        ct = np.empty(2)
+        pp = [Mom4D(), Mom4D]
+    
+        pm[0] = sqrt(p1.mom3d.dot(p1.mom3d))
+        pm[1] = sqrt(p2.mom3d.dot(p2.mom3d))
+        pp[0] = (1./pm[0])*p1
+        pp[1] = (1./pm[1])*p2
+    
+        for i in range(2):
+            ct[i] = pp[i][3]
+            st[i] = sqrt(1.-ct[i]*ct[i])
+            if np.isclose(abs(ct[i]), 1.):
+                cp[i] = 1.
+                sp[i] = 0.
+            else:
+                cp[i] = pp[i][2] / st[i]
+                sp[i] = pp[i][1] / st[i]
+    
+            r[i, 0, 0] = cp[i]
+            r[i, 0, 1] = sp[i]*ct[i]
+            r[i, 0, 2] = st[i]*sp[i]
+            r[i, 1, 0] = -sp[i]
+            r[i, 1, 1] = ct[i]*cp[i]
+            r[i, 1, 2] = cp[i]*st[i]
+            r[i, 2, 0] = 0.
+            r[i, 2, 1] = -st[i]
+            r[i, 2, 2] = ct[i]
+    
+        
+        rot = np.matmul(r[0],r[1].T) 
+        return rot
+
+    
+    
+    def rotat_inv(self, p2, rot):
+    # Rotation of a 4-vector:
+    #
+    #            p1 = rot*p2
+    #
+    # INPUT     OUTPUT
+    #
+    # p2, rot   p1
+
+        p1 = Mom4D()
+    
+        p1.E = p2.E
+        p1.mom3d = np.matmul(rot,p2.mom3d)
+    
+        return p1
 
