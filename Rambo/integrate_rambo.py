@@ -6,11 +6,11 @@ import numpy as np
 from itertools import combinations
 
 ### run parameters ############################
-seed = 1234567
-N = 3000000 # number of events
+seed = 123456
+N = 1000000000 # number of events
 E_CM = 1000.
 nin = 2 
-nout = 3 
+nout = 6 
 pT_min = 5.
 
 
@@ -101,8 +101,18 @@ while N_acc<N:
 
 
 
-    if N_acc%1000 == 0 and N_acc > last_print:
-        print('Event', N_acc,end="\r")
+    if N_acc%10000 == 0 and N_acc > last_print:
+        x0 = sum / N_acc
+        x00 = sum2 / N_acc
+        sigma2 = x00-x0**2
+        error = np.sqrt(sigma2/N_acc)
+
+        xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) *x0 
+
+        sigma_xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) * error 
+
+
+        print('Event', N_acc, " - ",'xs: ', xs, "pb  +/- " , sigma_xs , "pb = " , sigma_xs/xs*100,' %',end="\r")
         last_print = N_acc
 
 
