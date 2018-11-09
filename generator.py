@@ -38,7 +38,6 @@ class topGenerator(object):
     def generate_weight(self,pout):
         Ecms = self.Ecms
         nout = self.nout
-        #nout = 2
 
         ps_volume = (np.pi/2.)**(nout-1) * Ecms**(2*nout-4)/gamma(nout)/gamma(nout-1)
 
@@ -93,41 +92,28 @@ class topGenerator(object):
             enu = self.w_decay(wb1[0])
             munu = self.w_decay(wb2[0])
             
+            #out.append(wb2[1])
+            #out.append(munu[1])
+            #out.append(enu[1])
+            #out.append(munu[0])
+            #out.append(enu[0])
+            #out.append(wb1[1])
             out.append(wb2[1])
-            out.append(munu[1])
-            out.append(enu[1])
-            out.append(munu[0])
-            out.append(enu[0])
             out.append(wb1[1])
+            out.append(munu[0])
+            out.append(munu[1])
+            out.append(enu[0])
+            out.append(enu[1])
+                                                 
 
+        weight *= self.generate_weight(out)
 
+        if self.nout ==2 or self.nout == 3 or self.nout == 4:
+            w3 = 1
+            if self.nout == 2:
+                w2 = 1
 
-        
-        PS = 1
-        """
-        if self.nout ==4 or self.nout==6: 
-            MT = ttbar[1].m
-            MT2 = MT**2
-            MW2 = wb1[0].m **2
-            PS = 1./(2.*MT*128.*pow(pi,3))*(1.-MW2/MT2) 
-            if self.nout==6: 
-                MT = ttbar[0].m
-                MT2 = MT**2
-                MW2 = wb2[0].m **2
-                PS *= 1./(2.*MT*128.*pow(pi,3))*(1.-MW2/MT2) 
-        """
-        
-        
-        
-
-
-
-        weight *= self.generate_weight(out)*PS
-
-               
-
-
-        return out ,weight, None,None,None#, w1,w2,w3
+        return out ,weight, w1,w2, w3
     
     def generate_ttbar(self): 
         q = []
@@ -306,13 +292,20 @@ class topGenerator(object):
                 if isinstance(m,tuple):
                     if id == 6:
                         remainingE = 500
+                    remainingE = m[0]+5
                     rmax = arctan((remainingE**2-m[0]**2)/(m[0]*m[1])) 
+                    rmin = arctan(((m[0]-5)**2-m[0]**2)/(m[0]*m[1])) 
+                    m = (m[0],m[1],rmin)
+
                     r = m[2] + np.random.random()*(rmax-m[2])
                     s = m[0]*m[1]*tan(r)+m[0]*m[0]
                     
                     W *= (rmax-m[2])*((s-m[0]**2)**2+(m[0]*m[1])**2)/(m[0]*m[1])  # inverse breit wigner weight
 
-                    W *=  1./(2.*remainingE*128.*pow(pi,3))*(1.-s/remainingE**2) 
+                    #W *=  1./(2.*remainingE*128.*pow(pi,3))*(1.-s/remainingE**2) 
+
+                    W /= m[0]*m[1]*tan(rmax)+m[0]**2 - (m[0]*m[1]*tan(rmin)+m[0]**2)
+
 
                     m = sqrt(s)        
 

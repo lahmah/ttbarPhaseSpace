@@ -4,10 +4,12 @@ from rambo import *
 from vec4d import *
 import numpy as np
 from itertools import combinations
+from export_hepmc import export_hepmc
+
 
 ### run parameters ############################
-seed = 1234567
-N = 3000000 # number of events
+seed = 123456
+N = 1000000 # number of events
 E_CM = 1000.
 nin = 2 
 nout = 3 
@@ -61,18 +63,24 @@ N_nan = 0
 N_acc = 0
 last_print = 0
 
+WAll = 0
+AllEvents = []
+W = []
 while N_acc<N:
     N_gen +=1
 
     
 
     momenta,weight = PSGenerator.generate_massive_point(masses)
+    WAll += weight
 
     
 
+    temp = []
     for i, momentum in enumerate(momenta):
         Process.SetMomentum(i+2, momentum[0], momentum[1], momentum[2], momentum[3])
-
+        temp.append([momentum._arr])
+    AllEvents.append(temp)
     
     #Process.SetMomentum(4, momenta[0][0], momenta[0][1], momenta[0][2], momenta[0][3])
     #Process.SetMomentum(2, momenta[1][0], momenta[1][1], momenta[1][2], momenta[0][3])
@@ -99,10 +107,20 @@ while N_acc<N:
   
     sum2 += (me*weight)**2
 
+    W.append(me*weight)
+
+    if N_acc%10000 == 0 and N_acc > last_print:
+        x0 = sum / N_acc
+        x00 = sum2 / N_acc
+        sigma2 = x00-x0**2
+        error = np.sqrt(sigma2/N_acc)
+
+        xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) *x0 
+
+        sigma_xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) * error 
 
 
-    if N_acc%1000 == 0 and N_acc > last_print:
-        print('Event', N_acc,end="\r")
+        print('Event', N_acc, " - ",'xs: ', xs, "pb  +/- " , sigma_xs , "pb = " , sigma_xs/xs*100,' %',end="\r")
         last_print = N_acc
 
 
@@ -125,4 +143,7 @@ print("accepted events", N_acc)
 print('acceptance rate: ', N_acc/N_gen)
 print('nan detection: ', N_nan)
 
+print(WAll/N_acc)
+
+export_hepmc(E_CM, np.array(AllEvents).reshape(N,nout*4), W, "./own.hepmc")
 
