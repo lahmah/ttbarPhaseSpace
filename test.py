@@ -54,6 +54,30 @@ def testBWWeights():
     print("\n\n\n\n")
 
 
-wb, _ = gen.top_decay(ttbar[:,0])
+wb, _ = gen.decay(ttbar[:,0],"24","5OS")
 print(wb)
 print(wb.m)
+
+munu,_ = gen.decay(wb[:,0],"13OS","14OS")
+print(munu)
+print(munu.m)
+
+gen.nout = 2
+p,w =gen.generate_point()
+print(p)
+print(p[0].m, " - " ,p[1].m)
+gen.nout = 3
+p,w =gen.generate_point()
+print(p)
+print(p[0].m, " - " ,p[1].m, " - " ,p[2].m)
+gen.nout = 4 
+p,w =gen.generate_point()
+print(p)
+print(p[0].m, " - " ,p[1].m , " - ", p[2].m, " - ",p[3].m)
+gen.nout = 6 
+p,w =gen.generate_point()
+print(p)
+print(p[0].m, " - " ,p[1].m , " - ", p[2].m, " - ",p[3].m, " - " ,p[4].m , " - ", p[5].m)
+#print("\n\n\n\n")
+#testBWWeights()
+

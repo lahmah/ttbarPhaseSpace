@@ -23,10 +23,10 @@ class topGenerator (object):
         self.labsystem = Mom4D([0,0,0,1])
 
         # Particle masses and widths
-        MW = 80.38
-        GW = 2.09
-        MT = 173
-        GT = 1.41
+        MW = 80 #80.38
+        GW = 2# 2.09
+        MT = 175 #173
+        GT = 1.5 #1.41
         rWmin = arctan(-(pow(MW,2))/(MW*GW))
         rTmin = arctan(-(pow(MT,2))/(MT*GT))
         
@@ -37,7 +37,10 @@ class topGenerator (object):
         5  : (0,),#4.18,        # b-quark 
         6  : (MT,GT,rTmin),   # t-quark
         11 : (0,),              # elektron
-        12 : (0,),              # e-eutrino
+        12 : (0,),              # e-neutrino
+        13 : (0,),              # muon
+        14 : (0,),              # mu-neutrino
+
         24 : (MW,GW,rWmin)    # wboson
         }
 
@@ -48,11 +51,11 @@ class topGenerator (object):
         term3 = 1
 
         for i  in range(self.nout): 
-            modulus = sqrt( np.sum((pout[:,i].mom3d)**2))
+            modulus = sqrt( np.sum((pout[i].mom3d)**2))
             
             term1 += modulus / self.Ecms
-            term2 += modulus**2 / pout[:,i].E
-            term3 *= modulus / pout[:,i].E
+            term2 += modulus**2 / pout[i].E
+            term3 *= modulus / pout[i].E
 
         term1 = term1**(2*self.nout-3)
         term2 = term2**-1
@@ -82,9 +85,11 @@ class topGenerator (object):
                 if isinstance(m,tuple):
                     if FixedE:
                         remainingE = Ecms
-                    remainingE = m[0]+4*m[1]
+                    #mmax = m[0]+30*m[1]
+                    #remainingE = mmax
+                    mmin = 0 #m[0]-30*m[1]
                     rmax = arctan((remainingE**2-m[0]**2)/(m[0]*m[1])) 
-                    rmin = arctan(((m[0]-5)**2-m[0]**2)/(m[0]*m[1])) 
+                    rmin = arctan(((mmin)**2-m[0]**2)/(m[0]*m[1])) 
                     m = (m[0],m[1],rmin)
 
                     r = m[2] + np.random.random()*(rmax-m[2])
@@ -100,6 +105,41 @@ class topGenerator (object):
                 remainingE -= m
             masses.append(m)
         return array(masses) , W
+
+
+    def generate_point(self):
+        ttbar, BW_tt_weight   = self.generate_ttbar()
+
+        Weight = BW_tt_weight
+
+        if self.nout == 3 or True:
+            OS = "OS"
+        else:
+            OS = ""
+        if self.nout > 2:
+            wb1,   BW_wb1_weight  = self.decay(ttbar[:,0],"24"+OS,"5OS")
+            Weight *= BW_wb1_weight
+        if self.nout > 3:
+            enu,_  = self.decay(wb1[:,0],"11OS","12OS")
+        if self.nout == 6:
+            wb2,   BW_wb2_weight  = self.decay(ttbar[:,1],"24","5OS")
+            munu,_ = self.decay(wb2[:,0],"11OS","12OS")
+            Weight *=BW_wb2_weight
+
+        if self.nout == 2:
+            pout = [ttbar[:,0],ttbar[:,1]]
+        elif self.nout == 3:
+            pout = [wb1[:,0],  ttbar[:,1], wb1[:,1]] 
+        elif self.nout == 4:
+            pout = [wb1[:,1],ttbar[:,0],enu[:,0],enu[:,1]]
+        elif self.nout == 6:
+            pout = [wb1[:,1],wb2[:,1],munu[:,0],munu[:,1],enu[:,0],enu[:,1]]
+
+        Weight *= self.generate_weight(pout)
+        return pout, Weight, BW_tt_weight, BW_wb1_weight, self.generate_weight(pout)
+
+
+
 
 
     def generate_fourvectors(self,n):
@@ -177,21 +217,18 @@ class topGenerator (object):
             particles=("6","-6")
 
          
-        masses,BW_weight = self.generate_Masses(self.Ecms,*particles)
+        masses,BW_weight = self.generate_Masses(self.Ecms/2,*particles,FixedE=True)
 
+        if self.debug:
+            print("ttbar mass: ",masses)
         ttbar = self.generate_k(masses)
 
         return ttbar , BW_weight
 
-    def top_decay(self, pint):
+    def decay(self, pint, *pout):
         Ecms = pint.m
 
-        if self.nout ==3:
-            particles = ("24OS","5OS")
-        else:
-            particles = ("24","5OS")
-
-        masses,BW_weight = self.generate_Masses(Ecms,*particles) 
+        masses,BW_weight = self.generate_Masses(Ecms,*pout) 
 
         p = Mom4D(np.empty((4,2)))
 
