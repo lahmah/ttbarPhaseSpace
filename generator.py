@@ -292,9 +292,10 @@ class topGenerator(object):
                 if isinstance(m,tuple):
                     if id == 6:
                         remainingE = 500
-                    remainingE = m[0]+5
+                    #remainingE = m[0]+5
+                    Mmin = 0
                     rmax = arctan((remainingE**2-m[0]**2)/(m[0]*m[1])) 
-                    rmin = arctan(((m[0]-5)**2-m[0]**2)/(m[0]*m[1])) 
+                    rmin = arctan(((Mmin)**2-m[0]**2)/(m[0]*m[1])) 
                     m = (m[0],m[1],rmin)
 
                     r = m[2] + np.random.random()*(rmax-m[2])

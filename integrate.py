@@ -34,7 +34,7 @@ seed = 1234
 N = 100000 # number of events
 E_CM = 1000.
 nin = 2
-nout = 2 
+nout = 3 
 pT_min = 5
 angle_min = np.cos(0.3)
 ###############################################
@@ -91,6 +91,8 @@ W2 = []
 W3 = []
 
 
+ALLP = []
+
 while N_acc<N:
     N_gen +=1
 
@@ -113,8 +115,11 @@ while N_acc<N:
             input()
 
 
+    temp = []
     for i, momentum in enumerate(momenta):
+        temp.append([momentum._arr])
         Process.SetMomentum(i+2, momentum[0], momentum[1], momentum[2], momentum[3])
+    ALLP.append(temp)
         
     me = Process.CSMatrixElement()
     
@@ -153,7 +158,7 @@ while N_acc<N:
     if NOWEIGHTS:
         W.append(1)
     else:
-        W.append(weight)
+        W.append(weight*me)
 
 
 
@@ -202,7 +207,9 @@ print(np.sum(W)/N)
 
 
 
-#export_hepmc(E_CM, np.array(AllEvents).reshape(N,nout*4), W, "./own.hepmc")
+export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), W, "./oldGen.hepmc")
+export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), np.zeros(len(ALLP)), "./oldGenNoWeights.hepmc")
+
 
 
 
