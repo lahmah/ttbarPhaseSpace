@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import Sherpa
-from newGen import *
+from newnewGen import *
 from vec4d import *
 import numpy as np
 from itertools import combinations
@@ -31,11 +31,18 @@ else:
 
 ### run parameters ############################
 seed = 1234
-N = 100000 # number of events
+N = 50000 # number of events
 E_CM = 1000.
 nin = 2
-nout = 3 
+nout = 4 
 ###############################################
+if nout == 2:
+    pids = [6,-6]
+if nout == 3:
+    pids = [-24,6,-5]
+if nout == 4:
+    pids = [-5,6,11,-12]
+
 
 np.random.seed(seed)
 
@@ -71,27 +78,18 @@ N_nan = 0
 N_acc = 0
 last_print = 0
 
-WAll = 0
-W1 = 0
-W2 = 0
-W3 = 0
-W12 = 0
-
 ALLP = [] 
 ALLW = []
 while N_acc<N:
     N_gen +=1
 
+    #if N_gen == 416:
+    #    PSGenerator.debug = True
     if N_acc == -1:
         PSGenerator.debug=True
         DEBUG= True
         BREAK = True
-    momenta,weight,w1,w2,w3 = PSGenerator.generate_point() 
-    WAll += weight
-    W1 += w1
-    W2 += w2
-    W12 += w1*w2
-    W3 += w3
+    momenta,weight = PSGenerator.generate_point() 
 
     if DEBUG:
         print("sum of all Momenta:")
@@ -106,10 +104,16 @@ while N_acc<N:
             print(momentum, " - ", momentum.m)
         Process.SetMomentum(i+2, momentum[0], momentum[1], momentum[2], momentum[3])
         temp.append(momentum._arr)
-    ALLP.append(temp)
 
+    if weight <0:
+        print(N_gen)
+        input()
         
     me = Process.CSMatrixElement()
+#    print(temp)
+#    print(weight)
+#    print(me)
+#    input()
     
 
     if np.isnan(me):
@@ -117,12 +121,15 @@ while N_acc<N:
         N_nan += 1
         #print(N_nan,end="\r")
         continue
+    
 
 
     N_acc += 1
     sum += weight*me
     sum2 += (weight*me)**2
     ALLW.append(weight*me)
+    ALLP.append(temp)
+
         
     if N_acc%1000 == 0 and N_acc > last_print:
         print('Event', N_acc,end ="\r")
@@ -145,12 +152,7 @@ print("accepted events", N_acc)
 print('acceptance rate: ', N_acc/N_gen)
 print('generated nan: ', N_nan)
 
-print(W1/N_acc)
-print(W2/N_acc)
-print(W12/N_acc)
-print(W3/N_acc)
-print(WAll/N_acc)
-export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLW, "./Rambo/newGen.hepmc")
-export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), np.zeros(len(ALLP)), "./Rambo/newGenNoWeights.hepmc")
+export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLW,pids, "./nnGen.hepmc")
+export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), np.ones(len(ALLP)),pids, "./nnGNW.hepmc")
 
 

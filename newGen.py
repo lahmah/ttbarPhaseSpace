@@ -23,10 +23,10 @@ class topGenerator (object):
         self.labsystem = Mom4D([0,0,0,1])
 
         # Particle masses and widths
-        MW = 80 #80.38
-        GW = 2# 2.09
-        MT = 175 #173
-        GT = 1.5 #1.41
+        MW = 80.38
+        GW = 2.09
+        MT = 173
+        GT = 1.41
         rWmin = arctan(-(pow(MW,2))/(MW*GW))
         rTmin = arctan(-(pow(MT,2))/(MT*GT))
         
