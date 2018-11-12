@@ -35,13 +35,34 @@ N = 50000 # number of events
 E_CM = 1000.
 nin = 2
 nout = 4 
+filename="own"
 ###############################################
+if "nout" in sys.argv:
+    index = sys.argv.index("nout")
+    nout = int(sys.argv[index+1])
+if "file" in sys.argv:
+    index = sys.argv.index("file")
+    filename = sys.argv[index+1]
+if "N" in sys.argv:
+    index = sys.argv.index("N")
+    N = int(sys.argv[index+1])
+
+mask = np.arange(nout)
+
+if "mask" in sys.argv:
+    index = sys.argv.index("mask")
+    for i in range(nout):
+        mask[i] = int(sys.argv[index+1+i])
+        
+
 if nout == 2:
     pids = [6,-6]
 if nout == 3:
     pids = [-24,6,-5]
 if nout == 4:
-    pids = [-5,6,11,-12]
+    pids = np.array([11,6,-12,-5])
+    pids = pids[mask]
+    print(pids)
 
 
 np.random.seed(seed)
@@ -90,6 +111,7 @@ while N_acc<N:
         DEBUG= True
         BREAK = True
     momenta,weight = PSGenerator.generate_point() 
+    momenta = np.array(momenta)[mask]
 
     if DEBUG:
         print("sum of all Momenta:")
@@ -152,7 +174,7 @@ print("accepted events", N_acc)
 print('acceptance rate: ', N_acc/N_gen)
 print('generated nan: ', N_nan)
 
-export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLW,pids, "./nnGen.hepmc")
-export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), np.ones(len(ALLP)),pids, "./nnGNW.hepmc")
+export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLW,pids, "./"+filename+".hepmc")
+export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), np.ones(len(ALLP)),pids, "./"+filename+"NW.hepmc")
 
 

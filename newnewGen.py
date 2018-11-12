@@ -86,7 +86,7 @@ class topGenerator (object):
             masses = array([mw1,0])
             w1, b1, _ = self.decay(ttbar[1],masses)
             e, enu, _ = self.decay(w1,np.zeros(2))
-            pout = [b1, ttbar[0], e, enu]
+            pout = [e, ttbar[0], enu, b1]
 
             
         
@@ -100,7 +100,7 @@ class topGenerator (object):
                 for j in range(i+1,len(pout)):
                     print(i, " - ",j ,": ",angle(pout[i],pout[j]))
             print(Weight)
-            print("----------------_")
+            print("----------------")
 
         return pout, Weight
 
