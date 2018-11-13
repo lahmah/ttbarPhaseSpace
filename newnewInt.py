@@ -63,7 +63,12 @@ if nout == 4:
     pids = np.array([-12,6,11,-5])
     pids = pids[mask]
     print(pids)
+if nout == 6:
+    pids = np.array([14,5,-12,-13,11,-5])
 
+if "seed" in sys.argv:
+    index = sys.argv.index("seed")
+    seed = int(sys.argv[index+1])
 
 np.random.seed(seed)
 
@@ -108,17 +113,24 @@ while N_acc<N:
 
     #if N_gen == 416:
     #    PSGenerator.debug = True
-    if N_acc == -1:
+    if N_acc == 285900 and False:
         PSGenerator.debug=True
         DEBUG= True
         BREAK = True
     momenta,weight = PSGenerator.generate_point() 
     momenta = np.array(momenta)[mask]
 
+    if weight < 0:
+        DEBUG = True
+        PSGenerator.debug = True
+        BREAK = True
+        print(N_gen)
     if DEBUG:
         print("sum of all Momenta:")
         print(np.sum(momenta))
+        print(weight)
         print("------")
+
         if BREAK:
             input()
 
@@ -157,7 +169,7 @@ while N_acc<N:
     ALLP.append(temp)
 
         
-    if N_acc%1000 == 0 and N_acc > last_print:
+    if N_acc%100 == 0 and N_acc > last_print:
         print('Event', N_acc,end ="\r")
         last_print = N_acc
 

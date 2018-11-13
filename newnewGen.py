@@ -66,6 +66,8 @@ class topGenerator (object):
 
         weight /= MG*(tan(rmax) - tan(rmin))
 
+        if np.sqrt(s) == 0:
+            print("s = 0 - ",mass,gamma)
 
         return np.sqrt(s) , weight
 
@@ -83,7 +85,7 @@ class topGenerator (object):
             #Weight *= wb_D_weight
             pout = [w1, ttbar[0], b1]
         elif self.nout == 4:
-            mw1, w1_BW_Weight = self.generate_Mass(self.MW,self.GW,ttbar[1].m-self.Mb)
+            mw1, w1_BW_Weight = self.generate_Mass(self.MW,self.GW,ttbar[1].m-self.Mb,self.Me)
             Weight *= w1_BW_Weight
 
             masses = array([mw1,self.Mb])
@@ -93,8 +95,29 @@ class topGenerator (object):
 
             #Weight *= wb_D_weight*enu_D_weight
             pout = [enu, ttbar[0], e, b1]
+        elif self.nout == 6:
+            mw1, w1_BW_Weight = self.generate_Mass(self.MW,self.GW,ttbar[1].m-self.Mb,self.Me)
+            Weight *= w1_BW_Weight
 
-            
+            masses = array([mw1,self.Mb])
+            w1, b1, wb1_D_weight = self.decay(ttbar[1],masses)
+            masses = array([self.Me,0])
+            e, enu, enu_D_weight = self.decay(w1,masses)
+
+            mw2, w2_BW_Weight = self.generate_Mass(self.MW,self.GW,ttbar[0].m-self.Mb,self.Mmu)
+            Weight *= w2_BW_Weight
+
+            masses = array([mw2,self.Mb])
+            w2, b2, wb2_D_weight = self.decay(ttbar[0],masses)
+            masses = array([self.Mmu,0])
+            mu, munu, munu_D_weight = self.decay(w2,masses)
+            #Weight *= wb1_D_weight*wb2_D_weight*enu_D_weight*munu_D_weight
+
+
+
+
+            #Weight *= wb_D_weight*enu_D_weight
+            pout = [munu,b2,enu,mu,e,b1]            
         
         Weight *= self.generate_weight(pout)
 
@@ -192,18 +215,18 @@ class topGenerator (object):
         elif self.nout in [3,4]:  
             Mmax = self.Ecms
             if self.nout == 3:
-                Mmin = self.MW
+                Mmin = self.MW+self.Mb
             else:
-                Mmin = 0
+                Mmin = self.Mb+self.Me
             m1 = self.MT
             m2, BWw2 = self.generate_Mass(self.MT,self.GT,Mmax-m1,Mmin)
             BW_weight = BWw2 
 
         else: 
             Mmax = self.Ecms
-            Mmin = self.MW
-            m1, BWw1 = self.generate_Mass(self.MT,self.GT,Mmax,Mmin)
-            m2, BWw2 = self.generate_Mass(self.MT,self.GT,Mmax-m1,Mmin)
+            Mmin = self.Mb
+            m1, BWw1 = self.generate_Mass(self.MT,self.GT,Mmax,Mmin+self.Mmu)
+            m2, BWw2 = self.generate_Mass(self.MT,self.GT,Mmax-m1,Mmin+self.Me)
             BW_weight = BWw1*BWw2 
 
         masses=np.array([m1,m2])
@@ -218,6 +241,7 @@ class topGenerator (object):
         p = [Mom4D(),Mom4D()] 
 
         momentum = Ecms/2 * (1-sum(array(masses)**2)/Ecms**2)
+
         s = masses[0]**2-masses[1]**2 
         p[0].E = (1+s/Ecms**2) * Ecms/2
         p[1].E = (1-s/Ecms**2) * Ecms/2
