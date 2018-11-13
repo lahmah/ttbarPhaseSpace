@@ -60,7 +60,7 @@ if nout == 2:
 if nout == 3:
     pids = [-24,6,-5]
 if nout == 4:
-    pids = np.array([11,6,-12,-5])
+    pids = np.array([-12,6,11,-5])
     pids = pids[mask]
     print(pids)
 
@@ -94,6 +94,8 @@ pin = [pin1, pin2]
 
 sum = 0.
 sum2 = 0.
+sumW = 0
+sumW2 = 0
 N_gen = 0
 N_nan = 0
 N_acc = 0
@@ -149,6 +151,8 @@ while N_acc<N:
     N_acc += 1
     sum += weight*me
     sum2 += (weight*me)**2
+    sumW += weight
+    sumW2 += weight**2
     ALLW.append(weight*me)
     ALLP.append(temp)
 
@@ -167,8 +171,13 @@ error = np.sqrt(sigma2/N_acc)
 xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) *x0
 sigma_xs = conversion * (2*np.pi)**(4-3.*nout)/(2*E_CM**2) *error 
 
+ps = sumW/ N_acc
+ps2 = sumW2 / N_acc
+sigma2W = ps2-ps**2
+errorW = np.sqrt(sigma2W/N_acc)
     
 print('xs: ', xs, "pb  +/- " , sigma_xs , "pb = " , sigma_xs/xs*100,' %')
+print('ps: ', ps, " +/- ", errorW)
 print("generated events:", N_gen)
 print("accepted events", N_acc)
 print('acceptance rate: ', N_acc/N_gen)

@@ -23,10 +23,13 @@ class topGenerator (object):
         self.labsystem = Mom4D([0,0,0,1])
 
         # Particle masses and widths
-        self.MW = 80.38
-        self.GW = 2.09
-        self.MT = 173
-        self.GT = 1.41 
+        self.MW = 80.385
+        self.GW = 2.085
+        self.MT = 173.21
+        self.GT = 2
+        self.Mb = 4.8
+        self.Me = 0.000511
+        self.Mmu = 0.105
 
     def generate_weight(self,pout):
         term1 = 0
@@ -75,18 +78,21 @@ class topGenerator (object):
         if self.nout == 2:
             pout = ttbar
         elif self.nout == 3: # decay anti top - to W b
-            masses = array([self.MW,0])
+            masses = array([self.MW,self.Mb])
             w1 , b1, wb_D_weight = self.decay(ttbar[1],masses)
             #Weight *= wb_D_weight
             pout = [w1, ttbar[0], b1]
         elif self.nout == 4:
-            mw1, w1_BW_Weight = self.generate_Mass(self.MW,self.GW,ttbar[1].m)
+            mw1, w1_BW_Weight = self.generate_Mass(self.MW,self.GW,ttbar[1].m-self.Mb)
             Weight *= w1_BW_Weight
 
-            masses = array([mw1,0])
-            w1, b1, _ = self.decay(ttbar[1],masses)
-            e, enu, _ = self.decay(w1,np.zeros(2))
-            pout = [e, ttbar[0], enu, b1]
+            masses = array([mw1,self.Mb])
+            w1, b1, wb_D_weight = self.decay(ttbar[1],masses)
+            masses = array([self.Me,0])
+            e, enu, enu_D_weight = self.decay(w1,masses)
+
+            #Weight *= wb_D_weight*enu_D_weight
+            pout = [enu, ttbar[0], e, b1]
 
             
         
@@ -183,14 +189,17 @@ class topGenerator (object):
             m1 = self.MT
             m2 = m1
             BW_weight = 1
-        elif self.nout == 3:  
+        elif self.nout in [3,4]:  
             Mmax = self.Ecms
-            Mmin = self.MW
+            if self.nout == 3:
+                Mmin = self.MW
+            else:
+                Mmin = 0
             m1 = self.MT
             m2, BWw2 = self.generate_Mass(self.MT,self.GT,Mmax-m1,Mmin)
             BW_weight = BWw2 
 
-        elif self.nout > 3 : 
+        else: 
             Mmax = self.Ecms
             Mmin = self.MW
             m1, BWw1 = self.generate_Mass(self.MT,self.GT,Mmax,Mmin)
@@ -213,9 +222,10 @@ class topGenerator (object):
         p[0].E = (1+s/Ecms**2) * Ecms/2
         p[1].E = (1-s/Ecms**2) * Ecms/2
 
-        theta, phi = np.random.random(2)
-        theta *= pi
-        phi   += 2*pi
+        cosT = 2*np.random.random()-1
+        theta = np.arccos(cosT)
+        phi = np.random.random()
+        phi   *= 2*pi
 
         x = sin(theta)*cos(phi)
         y = sin(theta)*sin(phi)
@@ -246,7 +256,13 @@ class topGenerator (object):
             print(p[0], " - " , p[0].m)
             print(p[1], " - " , p[1].m)
 
-        Decay_Weight = np.pi *np.sqrt ((pint.m-p[0].m-p[1].m)**2-4*p[0].m*p[1].m)/(2*pint.m)
+        def lamda(P,p1,p2):
+            S = P.m**2
+            s1 = p1.m**2
+            s2 = p2.m**2
+            return (S-s1-s2)**2-4*s1*s2
+
+        Decay_Weight = np.pi * np.sqrt(lamda(pint,p[0],p[1]))/2/pint.m**2
         return p[0], p[1], Decay_Weight
 
 
@@ -353,118 +369,6 @@ class topGenerator (object):
     
         p1.E = p2.E
         p1.mom3d = np.matmul(rot,p2.mom3d)
-    
-        return p1
-
-
-    def Oboost(self, q, ph):
-    #                                      _
-    # Boost of a 4-vector ( relative speed q/q(0) ):
-    #
-    # ph is the 4-vector in the rest frame of q
-    # p is the corresponding 4-vector in the lab frame
-    #
-    # INPUT     OUTPUT
-    # q, ph     p
-
-        p = Mom4D()
-    
-        rsq = q.m
-    
-        p.E = (q.E*ph.E+np.dot(q.mom3d, ph.mom3d)) / rsq
-        c1 = (ph.E+p.E) / (rsq+q.E)
-        p.mom3d = ph.mom3d + c1*q.mom3d
-    
-        return p
-    
-    def Oboost_inv(self, q, p):
-    #                                      _
-    # Boost of a 4-vector ( relative speed q/q(0) ):
-    #
-    # ph is the 4-vector in the rest frame of q
-    # p is the corresponding 4-vector in the lab frame
-    #
-    # INPUT     OUTPUT
-    # q, p      ph
-    
-        ph = Mom4D()
-        rsq = q.m
-    
-        ph.E = q*p/rsq
-        c1 = (p.E+ph.E) / (rsq+q.E)
-        ph.mom3d = p.mom3d - c1*q.mom3d
-    
-        return ph
-
-    def Orotat(self, p1, p2):
-    # Rotation of a 4-vector:
-    #
-    #            p1 = rot*p2
-    #
-    # INPUT     OUTPUT
-    #
-    # p1, p2    rot
-
-        rot = np.empty((3, 3))
-        
-        r = np.empty((2, 3, 3))
-        pm = np.empty(2)
-        sp = np.empty(2)
-        cp = np.empty(2)
-        st = np.empty(2)
-        ct = np.empty(2)
-        pp = [Mom4D(), Mom4D]
-    
-        pm[0] = sqrt(p1.mom3d.dot(p1.mom3d))
-        pm[1] = sqrt(p2.mom3d.dot(p2.mom3d))
-        pp[0] = (1./pm[0])*p1
-        pp[1] = (1./pm[1])*p2
-    
-        for i in range(2):
-            ct[i] = pp[i][3]
-            st[i] = sqrt(1.-ct[i]*ct[i])
-            if np.isclose(abs(ct[i]), 1.):
-                cp[i] = 1.
-                sp[i] = 0.
-            else:
-                cp[i] = pp[i][2] / st[i]
-                sp[i] = pp[i][1] / st[i]
-    
-            r[i, 0, 0] = cp[i]
-            r[i, 0, 1] = sp[i]*ct[i]
-            r[i, 0, 2] = st[i]*sp[i]
-            r[i, 1, 0] = -sp[i]
-            r[i, 1, 1] = ct[i]*cp[i]
-            r[i, 1, 2] = cp[i]*st[i]
-            r[i, 2, 0] = 0.
-            r[i, 2, 1] = -st[i]
-            r[i, 2, 2] = ct[i]
-    
-            for i in range(3):
-                for l in range(3):
-                    rot[i, l] = 0.
-                    for k in range(3):
-                        rot[i, l] += r[0, i, k] * r[1, l, k]
-    
-        return rot
-    
-    
-    def Orotat_inv(self, p2, rot):
-    # Rotation of a 4-vector:
-    #
-    #            p1 = rot*p2
-    #
-    # INPUT     OUTPUT
-    #
-    # p2, rot   p1
-
-        p1 = Mom4D()
-    
-        p1.E = p2.E
-        for i in range(3):
-            p1[i+1] = 0.
-            for j in range(3):
-                p1[i+1] += rot[i, j] * p2[j+1]
     
         return p1
 

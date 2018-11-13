@@ -92,7 +92,7 @@ class Mom4D(Vec4D):
     @property
     def m(self):
         m2 = self*self
-        if isinstance(m2,float) or isinstance(m2,int):
+        if isinstance(m2,np.float)or isinstance(m2,np.int) or isinstance(m2,np.int64):
             m2 = np.array([m2])
         m2[np.logical_and(np.isclose(0,m2,atol=1.e-7),m2<0)]=0
         if (m2 < 0).any():
