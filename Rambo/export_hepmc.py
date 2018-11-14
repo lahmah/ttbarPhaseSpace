@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-def export_hepmc(E_CM, data, weights, pids, filename):
+def export_hepmc(E_CM, data, weights, filename):
     n_out = int(data.shape[1]/4)
     
     os.makedirs(os.path.dirname(filename), exist_ok=True)
@@ -30,7 +30,13 @@ def export_hepmc(E_CM, data, weights, pids, filename):
             # outgoing particles
 # 6 -> 5 24 ->       5 -13 14
 # -6 -> -5 -24 ->    -5 11 -12
-            for j,pid in enumerate(pids):
+            for j in range(n_out):
+                if j == 0:
+                    pid = -24 
+                elif j == 1:
+                    pid = 6
+                elif j == 2:
+                    pid = -5 
                
                 E = data[i, 4*j]
                 px = data[i, 4*j+1]

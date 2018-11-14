@@ -7,8 +7,8 @@ class Vec4D(object):
             self._arr = np.zeros(4)
         else:
             arr = np.asarray(arr)
-            if arr.shape != (4,):
-                raise TypeError('Wrong array size! Must have 4 entries.')
+           # if arr.shape != (4,):
+           #     raise TypeError('Wrong array size! Must have 4 entries.')
 
             self._arr = arr
 
@@ -30,7 +30,10 @@ class Vec4D(object):
 
     def __mul__(self, rhs):
         if isinstance(rhs, self.__class__):
-            return self[0]*rhs[0] - self.vec3d.dot(rhs.vec3d)
+            mk = np.array([-1,1,1,1])
+            if len(self._arr.shape) == 2:
+                mk = mk[:,None]
+            return np.sum(-self._arr*rhs._arr*mk,0)
         elif isinstance(rhs, int) or isinstance(rhs, float):
             return self.__class__(self._arr * rhs)
         else:
@@ -43,6 +46,10 @@ class Vec4D(object):
             return NotImplemented
 
     def __getitem__(self, key):
+        if hasattr(key,"__len__"):
+            if key[0] == slice(None,None,None) and isinstance(key[1],int):
+                return Mom4D(self._arr[key])
+        
         return self._arr[key]
 
     def __setitem__(self, key, value):
@@ -85,12 +92,14 @@ class Mom4D(Vec4D):
     @property
     def m(self):
         m2 = self*self
-        if m2 < 0:
-            if np.isclose(0., m2, atol=1.e-7):
-                return 0.
-            else:
-                raise ValueError('Negative Mass!')
+        if isinstance(m2,np.float)or isinstance(m2,np.int) or isinstance(m2,np.int64):
+            m2 = np.array([m2])
+        m2[np.logical_and(np.isclose(0,m2,atol=1.e-7),m2<0)]=0
+        if (m2 < 0).any():
+               raise ValueError('Negative Mass!')
 
+        if len(m2)==1:
+            return np.sqrt(m2[0])
         return np.sqrt(m2)
 
     @property

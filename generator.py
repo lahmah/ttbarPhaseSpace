@@ -1,217 +1,255 @@
 import numpy as np
-from numpy import sqrt, pi, log ,exp, tan, arctan, sin, cos, array
-from vec4d import *
+from numpy import pi, sin, cos, arctan, tan, log, sqrt, array
 from math import gamma
+from functools import partial
+from scipy.optimize import newton
+from vec4d import *
 
-def floorToZero(a,N=8):
+def floorToZero(a,N=0):
+    return a
     return int(a*10**N)*10**-N
 
-class topGenerator(object):
-    def __init__(self, nin, nout, Ecms, debug = False):
-        self.nin = nin
+class topGenerator (object):
+    def __init__(self, nout, Ecms, debug = False):
         self.nout = nout
         self.Ecms = Ecms
         self.debug = debug
 
+        self.ps_volume = (pi/2.)**(nout-1) \
+                * Ecms**(2*nout-4) \
+                /gamma(nout)/gamma(nout-1)# \
+
+
         self.labsystem = Mom4D([0,0,0,1])
 
-
-        MW = 80.38
-        GW = 2.09
-        MT = 173
-        GT = 1.41
-        rWmin = arctan(-(pow(MW,2))/(MW*GW))
-        rTmin = arctan(-(pow(MT,2))/(MT*GT))
-        
-        if nout == 3:
-            rTmin =  arctan(MW-(pow(MT,2))/(MT*GT))
-       
-        self.particles={             
-        5  : 0,#4.18,        # b-quark 
-        6  : (MT,GT,rTmin),   # t-quark
-        11 : 0,              # elektron
-        12 : 0,              # e-eutrino
-        24 : (MW,GW,rWmin)    # wboson
-        }
-                       
+        # Particle masses and widths
+        self.MW = 80.385
+        self.GW = 2.085
+        self.MT = 173.21
+        self.GT = 2
+        self.Mb = 4.8
+        self.Me = 0.000511
+        self.Mmu = 0.105
 
     def generate_weight(self,pout):
-        Ecms = self.Ecms
-        nout = self.nout
-        #nout = 2
+        term1 = 0
+        term2 = 0
+        term3 = 1
 
-        ps_volume = (np.pi/2.)**(nout-1) * Ecms**(2*nout-4)/gamma(nout)/gamma(nout-1)
+        for i  in range(self.nout): 
+            modulus = sqrt( np.sum((pout[i].mom3d)**2))
+            
+            term1 += modulus / self.Ecms
+            term2 += modulus**2 / pout[i].E
+            term3 *= modulus / pout[i].E
 
-        return ps_volume
+        term1 = term1**(2*self.nout-3)
+        term2 = term2**-1
+        return self.ps_volume * term1*term2*term3*self.Ecms
+    
+    def generate_Mass(self,mass,gamma,mmax,mmin = 0):
+        
+        Smin = mmin**2
+        Smax = mmax**2
+        M2 = mass**2
+        MG = mass*gamma
+        rmin = arctan((Smin-M2)/MG)
+        rmax = arctan((Smax-M2)/MG)
+
+        # generate r
+        r = rmin+np.random.random()*(rmax-rmin)
+        # generate s                                   
+        s = MG*tan(r)+M2     
+        
+        weight = (rmax-rmin)*((s-M2)**2+MG**2)/MG  
+        weight *= np.pi/(rmax-rmin)
+
+        weight /= MG*(tan(rmax) - tan(rmin))
+
+        if np.sqrt(s) == 0:
+            print("s = 0 - ",mass,gamma)
+
+        return np.sqrt(s) , weight
 
     def generate_point(self):
-        out = []
+        Weight = 1
+        ttbar,tt_BW_Weight = self.generate_ttbar()
 
-        weight = 1
-        ttbar,w1 = self.generate_ttbar()
-        weight *=w1
-
-        if self.nout ==2:
-            out = ttbar
-        else:
-            wb1,w2 = self.top_decay(ttbar[1])
-            weight*=w2
-       
-        if self.nout == 3:
-            out.append(wb1[0])
-            out.append(ttbar[0])
-            out.append(wb1[1])             
-            
-            p = [wb1[0],ttbar[0]]
-            masses = [wb1[0].m,wb1[1].m]
-            Ki_abs = array([sqrt(p[i].E**2-masses[i]**2) for i in range(2)])
-            Xi = sum(Ki_abs)/self.Ecms
- 
-            # weight for mass shift of top quark
-            nout = 2
-            weight *= Xi**(2*nout-3)    
-            temp = 0
-            for i in range(nout):
-                weight *= Ki_abs[i]/p[i].E
-                temp += Ki_abs[i]**2/p[i].E
-            weight /= temp
-            weight *=self.Ecms
-
-            
+        Weight *= tt_BW_Weight
+        
+        if self.nout == 2:
+            pout = ttbar
+        elif self.nout == 3: # decay anti top - to W b
+            masses = array([self.MW,self.Mb])
+            w1 , b1, wb_D_weight = self.decay(ttbar[1],masses)
+            #Weight *= wb_D_weight
+            pout = [w1, ttbar[0], b1]
         elif self.nout == 4:
-            enu = self.w_decay(wb1[0])
-            out.append(enu[0])
-            out.append(enu[1])
-            out.append(ttbar[0])
-            out.append(wb1[1]) 
+            mw1, w1_BW_Weight = self.generate_Mass(self.MW,self.GW,ttbar[1].m-self.Mb,self.Me)
+            Weight *= w1_BW_Weight
+
+            masses = array([mw1,self.Mb])
+            w1, b1, wb_D_weight = self.decay(ttbar[1],masses)
+            masses = array([self.Me,0])
+            e, enu, enu_D_weight = self.decay(w1,masses)
+
+            #Weight *= wb_D_weight*enu_D_weight
+            pout = [enu, ttbar[0], e, b1]
+        elif self.nout == 6:
+            mw1, w1_BW_Weight = self.generate_Mass(self.MW,self.GW,ttbar[1].m-self.Mb,self.Me)
+            Weight *= w1_BW_Weight
+
+            masses = array([mw1,self.Mb])
+            w1, b1, wb1_D_weight = self.decay(ttbar[1],masses)
+            masses = array([self.Me,0])
+            e, enu, enu_D_weight = self.decay(w1,masses)
+
+            mw2, w2_BW_Weight = self.generate_Mass(self.MW,self.GW,ttbar[0].m-self.Mb,self.Mmu)
+            Weight *= w2_BW_Weight
+
+            masses = array([mw2,self.Mb])
+            w2, b2, wb2_D_weight = self.decay(ttbar[0],masses)
+            masses = array([self.Mmu,0])
+            mu, munu, munu_D_weight = self.decay(w2,masses)
+            #Weight *= wb1_D_weight*wb2_D_weight*enu_D_weight*munu_D_weight
 
 
+
+
+            #Weight *= wb_D_weight*enu_D_weight
+            pout = [munu,b2,enu,mu,e,b1]            
         
-        elif self.nout == 6: 
-            wb2,w3= self.top_decay(ttbar[0])
-            weight*=w3
-            enu = self.w_decay(wb1[0])
-            munu = self.w_decay(wb2[0])
-            
-            out.append(wb2[1])
-            out.append(munu[1])
-            out.append(enu[1])
-            out.append(munu[0])
-            out.append(enu[0])
-            out.append(wb1[1])
+        Weight *= self.generate_weight(pout)
 
+        if self.debug:
+            print("Output")
+            for i in range(len(pout)):
+                print(pout[i], " - ", pout[i].m)
+            for i in range(len(pout)):
+                for j in range(i+1,len(pout)):
+                    print(i, " - ",j ,": ",angle(pout[i],pout[j]))
+            print(Weight)
+            print("----------------")
 
+        return pout, Weight
 
+    def generate_q(self,n):
+        ran = np.random.rand(4,n)
+        c = 2.*ran[0]-1.
+        phi = 2.*pi*ran[1]
         
-        PS = 1
-        """
-        if self.nout ==4 or self.nout==6: 
-            MT = ttbar[1].m
-            MT2 = MT**2
-            MW2 = wb1[0].m **2
-            PS = 1./(2.*MT*128.*pow(pi,3))*(1.-MW2/MT2) 
-            if self.nout==6: 
-                MT = ttbar[0].m
-                MT2 = MT**2
-                MW2 = wb2[0].m **2
-                PS *= 1./(2.*MT*128.*pow(pi,3))*(1.-MW2/MT2) 
-        """
-        
-        
-        
-
-
-
-        weight *= self.generate_weight(out)*PS
-
-               
-
-
-        return out ,weight, None,None,None#, w1,w2,w3
+        q = np.empty((4,n))
+        q[0] = -log(ran[2]*ran[3])
+        q[1] = q[0]*sqrt(1-c**2)*cos(phi)
+        q[2] = q[0]*sqrt(1-c**2)*sin(phi)
+        q[3] = q[0]*c
+      
+        return Mom4D(q)
     
-    def generate_ttbar(self): 
-        q = []
-        Q = Mom4D()
-        for i in range(2):
-            q.append(self.generate_fourvector())
-            Q += q[i]
-        
+    def generate_p(self,n):
+        q = self.generate_q(n) 
+        Q = Mom4D(np.sum(q._arr,1))
+       
         M = Q.m
         b = -Q.mom3d/M
         x = self.Ecms/M
         gamma = Q.E/M
         a = 1./(1.+gamma)
         
-        p = []
-        for i in range(2):
-            p.append(Mom4D())
-            bdotq = b.dot(q[i].mom3d)
-            p[i].E = x*(gamma*q[i].E + bdotq)    
-            p[i].mom3d = x*(q[i].mom3d + b*q[i].E + a*bdotq*b)
+        p = np.empty((4,n)) 
 
+        bdotq = np.sum(b * q.mom3d.T,axis = 1) 
+        p[0] = x* (gamma*q.E+bdotq)
+        p[1:] = x * (q.mom3d + b[:,None]*q.E + a*bdotq*b[:,None])
+   
+        return Mom4D(p)
+
+    def fxi(self,p,masses,xi):
+        nout = len(masses)
+        val = 0
+        for i in range(nout):
+            val += sqrt(masses[i]**2+xi**2*p[:,i].E**2)
+        return val -self.Ecms
+
+    def dfxi(self,p,masses,xi):
+        nout = len(masses)
+        val = 0
+        for i in range(nout):
+            denom = sqrt(masses[i]**2+xi**2*p[:,i].E**2)
+            val += xi * p[:,i].E**2 / denom
+        return val
+
+
+    def generate_k(self,masses):
+        n = len(masses)
+
+        p = self.generate_p(n) 
+        
+        mass_sum = np.sum(masses)
+
+        f = partial(self.fxi,p,masses)
+        df = partial(self.dfxi,p,masses)
+
+        xi_0 = sqrt(1-(mass_sum / self.Ecms)**2)
+
+        try:
+            Xi = newton(f,xi_0,df)
+        except:
+            Xi =xi_0
+            print("Faild Newton with: ",p)
+
+        k = np.empty((4,n))
+        k[0] = sqrt(p.E**2*Xi**2+masses**2)
+        k[1:] = Xi*p.mom3d
+
+        
+        return [Mom4D(k[:,0]) ,Mom4D(k[:,1])]
+
+
+    def generate_ttbar(self): 
+        
         if self.nout == 2:
-            masses,weight = self.generate_Masses(self.Ecms,"6OS","-6OS")
+            m1 = self.MT
+            m2 = m1
+            BW_weight = 1
+        elif self.nout in [3,4]:  
+            Mmax = self.Ecms
+            if self.nout == 3:
+                Mmin = self.MW+self.Mb
+            else:
+                Mmin = self.Mb+self.Me
+            m1 = self.MT
+            m2, BWw2 = self.generate_Mass(self.MT,self.GT,Mmax-m1,Mmin)
+            BW_weight = BWw2 
 
-        if self.nout == 3 or self.nout == 4:
-            masses,weight = self.generate_Masses(self.Ecms,"6","-6")
-        if self.nout == 6:
-            masses,weight = self.generate_Masses(self.Ecms,"6","-6")
-            
+        else: 
+            Mmax = self.Ecms
+            Mmin = self.Mb
+            m1, BWw1 = self.generate_Mass(self.MT,self.GT,Mmax,Mmin+self.Mmu)
+            m2, BWw2 = self.generate_Mass(self.MT,self.GT,Mmax-m1,Mmin+self.Me)
+            BW_weight = BWw1*BWw2 
 
+        masses=np.array([m1,m2])
 
+        ttbar = self.generate_k(masses)
 
-        Ki_abs = array([sqrt(p[i].E**2-masses[i]**2) for i in range(2)])
- 
-        Xi = sum(Ki_abs)/self.Ecms
-        
-        for i in range(2):
-            p[i].mom3d *= Xi
-            p[i].E = np.sqrt(masses[i]**2+Xi**2*p[i].E**2)
+        return ttbar , BW_weight
 
-         
-        if self.nout == 2:
-            # weight for mass shift of top quark
-            nout = 2
-            weight *= Xi**(2*nout-3)    
-            temp = 0
-            for i in range(nout):
-                weight *= Ki_abs[i]/p[i].E
-                temp += Ki_abs[i]**2/p[i].E
-            weight /= temp
-            weight *=self.Ecms
-        
-        
+    def decay(self, pint, masses):
+        Ecms = pint.m
 
-        if self.debug:
-            print("ttbar:")
-            print("masses: ", masses) 
-            print("t: ",p[0]," - ",p[0].m)
-            print("tb: ",p[1]," - ",p[1].m)
-        return p, weight
+        p = [Mom4D(),Mom4D()] 
 
-    def top_decay(self, pint):
-        E_CM = pint.m
+        momentum = Ecms/2 * (1-sum(array(masses)**2)/Ecms**2)
 
-        if self.nout == 3:
-            masses,weight = self.generate_Masses(E_CM,"24OS","5OS") 
-        if self.nout == 4 or self.nout == 6:
-             masses,weight = self.generate_Masses(E_CM,"24","5OS") 
-
-        if self.debug:
-            print("top decay:")
-            print("mass in: ",E_CM)
-            print("masses out: ", masses) 
-
-        p = [Mom4D(), Mom4D()]
-
-        momentum = E_CM/2 * (1-sum(array(masses)**2)/E_CM**2)
         s = masses[0]**2-masses[1]**2 
-        p[0].E = (1+s/E_CM**2) * E_CM/2
-        p[1].E = (1-s/E_CM**2) * E_CM/2
+        p[0].E = (1+s/Ecms**2) * Ecms/2
+        p[1].E = (1-s/Ecms**2) * Ecms/2
 
-        theta, phi = np.random.random(2)
-        theta *= pi
-        phi   += 2*pi
+        cosT = 2*np.random.random()-1
+        theta = np.arccos(cosT)
+        phi = np.random.random()
+        phi   *= 2*pi
 
         x = sin(theta)*cos(phi)
         y = sin(theta)*sin(phi)
@@ -222,10 +260,9 @@ class topGenerator(object):
         p[1].mom3d = -momentum
         
         if self.debug:
-            print("w,b befor boost:")
-            print("w: ",p[0], " - " , p[0].m)
-            print("b: ",p[1], " - " , p[1].m)
-
+            print("befor boost:")
+            print(p[0], " - " , p[0].m)
+            print(p[1], " - " , p[1].m)
 
 
         m_rot = self.rotat(pint,self.labsystem)
@@ -234,147 +271,26 @@ class topGenerator(object):
         p[0] = self.boost(pint,p[0])
         p[1] = self.boost(pint,p[1])
 
-
-        if self.debug:
-            print("w,b after boost:")
-            print("w: ",p[0], " - " , p[0].m)
-            print("b: ",p[1], " - " , p[1].m)
-
-        return p,weight
-
-
-    def w_decay(self, pint):
-        E_CM = pint.m
+                
         
-        p = [Mom4D(),Mom4D()]
-
-        p[0].E = E_CM/2
-        p[1].E = E_CM/2
-
-
-        theta, phi = np.random.random(2)
-        theta *= pi
-        phi   += 2*pi
-
-        x = sin(theta)*cos(phi)
-        y = sin(theta)*sin(phi)
-        z = cos(theta)
-        momentum = E_CM/2 * array([x,y,z])
-
-        p[0].mom3d = momentum
-        p[1].mom3d = -momentum
-
-        m_rot = self.rotat(pint,self.labsystem)
-        p[0] = self.rotat_inv(p[0],m_rot)
-        p[1] = self.rotat_inv(p[1],m_rot)
-        p[0] = self.boost(pint,p[0])
-        p[1] = self.boost(pint,p[1])
 
 
         if self.debug:
-            print("W decay")
+            print("after boost:") 
+            print(p[0], " - " , p[0].m)
+            print(p[1], " - " , p[1].m)
 
-            print("e / nu: ",p[1], " - " , p[1].m)
-            print("nu / nu: ", p[0], " - " , p[0].m)
+        def lamda(P,p1,p2):
+            S = P.m**2
+            s1 = p1.m**2
+            s2 = p2.m**2
+            return (S-s1-s2)**2-4*s1*s2
 
-
-        return p
-
-
-    # generation of masses according to Breit-Wigner
-    def generate_Masses(self,Ecms,*argsv):
-        masses = []             
-        remainingE = Ecms
-        
-        W = 1
-        for arg in argsv:
-            if arg.endswith("OS"):
-                id = abs(int(arg[:-2]))
-                m = self.particles.get(id)
-                if isinstance(m,tuple): 
-                    m = m[0]
-                remainingE -= m
-        for arg in argsv:        
-            if arg.endswith("OS"):
-                id = abs(int(arg[:-2]))
-                m = self.particles.get(id)
-                if isinstance(m,tuple):
-                    m = m[0]
-            else:    
-                id = abs(int(arg)) 
-                m = self.particles.get(id)
-                if isinstance(m,tuple):
-                    if id == 6:
-                        remainingE = 500
-                    rmax = arctan((remainingE**2-m[0]**2)/(m[0]*m[1])) 
-                    r = m[2] + np.random.random()*(rmax-m[2])
-                    s = m[0]*m[1]*tan(r)+m[0]*m[0]
-                    
-                    W *= (rmax-m[2])*((s-m[0]**2)**2+(m[0]*m[1])**2)/(m[0]*m[1])  # inverse breit wigner weight
-
-                    W *=  1./(2.*remainingE*128.*pow(pi,3))*(1.-s/remainingE**2) 
-
-                    m = sqrt(s)        
-
-                remainingE -= m
-            masses.append(m)
-        return masses , W
-
-    def generate_fourvector(self):
-        ran = np.random.rand(4)
-        c = 2.*ran[0]-1.
-        phi = 2.*pi*ran[1]
-        
-        q = Mom4D()
-        q[0] = -log(ran[2]*ran[3])
-        q[1] = q[0]*sqrt(1-c**2)*cos(phi)
-        q[2] = q[0]*sqrt(1-c**2)*sin(phi)
-        q[3] = q[0]*c
-        
-        return q
+        Decay_Weight = np.pi * np.sqrt(lamda(pint,p[0],p[1]))/2/pint.m**2
+        return p[0], p[1], Decay_Weight
 
 
-    
-    def polytope(self, m):
-    # Produces a uniform random distribution inside a polytope with
-    # | x_k | < 1, | x_k-x_l | < 1, see physics/0003078
-        
-        x = np.empty(m+1)
-    
-        # number of negative values
-        k = int((m+1)*np.random.random())
-        x[0] = 0.
-    
-        if k == 0:
-            for i in range(1, m+1):
-                x[i] = np.random.random()
-        
-        elif k == m:
-            for i in range(1, m+1):
-                x[i] = -np.random.random()
-    
-        else:
-            prod = 1.
-            for i in range(1, k+1):
-                prod *= np.random.random()
-    
-            v1 = -log(prod)
-            prod = 1.
-            for i in range(1, m-k+2):
-                prod *= np.random.random()
-    
-            v2 = -log(prod)
-            y1 = v1/(v1+v2)
-            x[1] = -y1
-            x[m] = (1-y1) * random.random()**(1./(m-k))
-            for i in range(2, k+1):
-                x[i] = x[1]*random.random()
-    
-            for i in range(k+1, m):
-                x[i] = x[m]*np.random.random()
-    
-        return np.random.permutation(x)
-    
+
     def boost(self, q, ph):
     #                                      _
     # Boost of a 4-vector ( relative speed q/q(0) ):
@@ -458,13 +374,10 @@ class topGenerator(object):
             r[i, 2, 1] = -st[i]
             r[i, 2, 2] = ct[i]
     
-            for i in range(3):
-                for l in range(3):
-                    rot[i, l] = 0.
-                    for k in range(3):
-                        rot[i, l] += r[0, i, k] * r[1, l, k]
-    
+        
+        rot = np.matmul(r[0],r[1].T) 
         return rot
+
     
     
     def rotat_inv(self, p2, rot):
@@ -479,10 +392,7 @@ class topGenerator(object):
         p1 = Mom4D()
     
         p1.E = p2.E
-        for i in range(3):
-            p1[i+1] = 0.
-            for j in range(3):
-                p1[i+1] += rot[i, j] * p2[j+1]
+        p1.mom3d = np.matmul(rot,p2.mom3d)
     
         return p1
 
