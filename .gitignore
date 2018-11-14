@@ -4,3 +4,7 @@ Process/
 Sherpa_References.tex
 SConstruct
 .sconsign.dblite
+*.hepmc
+*.yoda
+*.db
+*.db.bak

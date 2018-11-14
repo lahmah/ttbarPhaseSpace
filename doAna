@@ -1,0 +1,14 @@
+rivet --analysis MC_TTBAR_SINGLEDECAY tt4.hepmc -o tt4.yoda
+rivet --analysis MC_TTBAR_DOUBLEDECAY tt6.hepmc -o tt6.yoda
+rivet --analysis MC_TTBAR tt2.hepmc -o tt2.yoda
+rivet --analysis MC_TTBAR_SINGLEDECAY_23 tt3.hepmc -o tt3.yoda
+
+rivet --analysis MC_TTBAR_SINGLEDECAY nnG4.hepmc -o nnG4.yoda
+rivet --analysis MC_TTBAR nnG2.hepmc -o nnG2.yoda
+rivet --analysis MC_TTBAR_SINGLEDECAY_23 nnG3.hepmc -o nnG3.yoda
+
+
+rivet --analysis MC_TTBAR_SINGLEDECAY nnG4NW.hepmc -o nnG4NW.yoda
+rivet --analysis MC_TTBAR nnG2NW.hepmc -o nnG2NW.yoda
+rivet --analysis MC_TTBAR_SINGLEDECAY_23 nnG3NW.hepmc -o nnG3NW.yoda
+
