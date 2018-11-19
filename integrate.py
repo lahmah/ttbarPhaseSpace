@@ -113,7 +113,7 @@ while N_acc<N:
 
     #if N_gen == 416:
     #    PSGenerator.debug = True
-    if N_acc == 285900 and False:
+    if N_acc == 62000 and False:
         PSGenerator.debug=True
         DEBUG= True
         BREAK = True
@@ -121,6 +121,8 @@ while N_acc<N:
     momenta = np.array(momenta)[mask]
 
     if weight < 0:
+        print("continue")
+        continue
         DEBUG = True
         PSGenerator.debug = True
         BREAK = True
@@ -169,7 +171,7 @@ while N_acc<N:
     ALLP.append(temp)
 
         
-    if N_acc%100 == 0 and N_acc > last_print:
+    if N_acc%1000 == 0 and N_acc > last_print:
         print('Event', N_acc,end ="\r")
         last_print = N_acc
 

@@ -3,6 +3,7 @@ from numpy import pi, sin, cos, arctan, tan, log, sqrt, array
 from math import gamma
 from functools import partial
 from scipy.optimize import newton
+from scipy.stats import t
 from vec4d import *
 
 def floorToZero(a,N=0):
@@ -47,7 +48,7 @@ class topGenerator (object):
         term2 = term2**-1
         return self.ps_volume * term1*term2*term3*self.Ecms
     
-    def generate_Mass(self,mass,gamma,mmax,mmin = 0):
+    def _old_generate_Mass(self,mass,gamma,mmax,mmin = 0):
         
         Smin = mmin**2
         Smax = mmax**2
@@ -62,7 +63,7 @@ class topGenerator (object):
         s = MG*tan(r)+M2     
         
         weight = (rmax-rmin)*((s-M2)**2+MG**2)/MG  
-        weight *= np.pi/(rmax-rmin)
+        #weight *= np.pi/(rmax-rmin)
 
         weight /= MG*(tan(rmax) - tan(rmin))
 
@@ -70,6 +71,24 @@ class topGenerator (object):
             print("s = 0 - ",mass,gamma)
 
         return np.sqrt(s) , weight
+
+    def generate_Mass(self,mass,gamma,mmax,mmin):
+        Lambda = 1/2
+        m = -1
+        counter = 0
+        while m < mmin or m > mmax:
+            if counter > 1000:
+                print( mmin, " - ", m ," - " ,mmax)
+                counter = 0
+            m = np.random.standard_t(1)*gamma/2/Lambda +mass
+            counter += 1
+
+
+
+        weight = 1/(t.pdf(m-mass,1)*gamma*(mmax-mmin))
+        return m, weight
+
+
 
     def generate_point(self):
         Weight = 1
@@ -223,10 +242,12 @@ class topGenerator (object):
             BW_weight = BWw2 
 
         else: 
-            Mmax = self.Ecms
-            Mmin = self.Mb
-            m1, BWw1 = self.generate_Mass(self.MT,self.GT,Mmax,Mmin+self.Mmu)
-            m2, BWw2 = self.generate_Mass(self.MT,self.GT,Mmax-m1,Mmin+self.Me)
+            Mmax = self.Ecms-self.Mb-self.Me
+            Mmin = self.Mb+self.Mmu
+            m1, BWw1 = self.generate_Mass(self.MT,self.GT,Mmax,Mmin)
+            Mmax = self.Ecms-m1
+            Mmin = self.Mb+self.Me 
+            m2, BWw2 = self.generate_Mass(self.MT,self.GT,Mmax,Mmin)
             BW_weight = BWw1*BWw2 
 
         masses=np.array([m1,m2])
@@ -253,7 +274,7 @@ class topGenerator (object):
 
         x = sin(theta)*cos(phi)
         y = sin(theta)*sin(phi)
-        z = cos(theta)
+        z =cosT 
 
         momentum *= array([x,y,z])
         p[0].mom3d = +momentum

@@ -1,14 +1,24 @@
-rivet --analysis MC_TTBAR_SINGLEDECAY tt4.hepmc -o tt4.yoda
-rivet --analysis MC_TTBAR_DOUBLEDECAY tt6.hepmc -o tt6.yoda
-rivet --analysis MC_TTBAR tt2.hepmc -o tt2.yoda
-rivet --analysis MC_TTBAR_SINGLEDECAY_23 tt3.hepmc -o tt3.yoda
+rivet --analysis MC_TTBAR Sherpa2.hepmc -o Sherpa2.yoda
+rivet --analysis MC_TTBAR_SINGLEDECAY_23 Sherpa3.hepmc -o Sherpa3.yoda
+rivet --analysis MC_TTBAR_SINGLEDECAY Sherpa4.hepmc -o Sherpa4.yoda
+rivet --analysis MC_TTBAR_DOUBLEDECAY Sherpa6.hepmc -o Sherpa6.yoda
 
-rivet --analysis MC_TTBAR_SINGLEDECAY nnG4.hepmc -o nnG4.yoda
-rivet --analysis MC_TTBAR nnG2.hepmc -o nnG2.yoda
-rivet --analysis MC_TTBAR_SINGLEDECAY_23 nnG3.hepmc -o nnG3.yoda
+rivet --analysis MC_TTBAR is2-?.hepmc -o is2.yoda
+rivet --analysis MC_TTBAR_SINGLEDECAY_23 is3-?.hepmc -o is3.yoda
+rivet --analysis MC_TTBAR_SINGLEDECAY is4-?.hepmc -o is4.yoda
+rivet --analysis MC_TTBAR_DOUBLEDECAY is6-?.hepmc -o is6.yoda
+
+rivet --analysis MC_TTBAR_SINGLEDECAY_23 ist3-?.hepmc -o ist3.yoda
+rivet --analysis MC_TTBAR_SINGLEDECAY ist4-?.hepmc -o ist4.yoda
+rivet --analysis MC_TTBAR_DOUBLEDECAY ist6-?.hepmc -o ist6.yoda
 
 
-rivet --analysis MC_TTBAR_SINGLEDECAY nnG4NW.hepmc -o nnG4NW.yoda
-rivet --analysis MC_TTBAR nnG2NW.hepmc -o nnG2NW.yoda
-rivet --analysis MC_TTBAR_SINGLEDECAY_23 nnG3NW.hepmc -o nnG3NW.yoda
+rivet --analysis MC_TTBAR is2-?NW.hepmc -o is2NW.yoda
+rivet --analysis MC_TTBAR_SINGLEDECAY_23 is3-?NW.hepmc -o is3NW.yoda
+rivet --analysis MC_TTBAR_SINGLEDECAY is4-?NW.hepmc -o is4NW.yoda
+rivet --analysis MC_TTBAR_DOUBLEDECAY is6-?NW.hepmc -o is6NW.yoda
+
+rivet --analysis MC_TTBAR_SINGLEDECAY_23 ist3-?NW.hepmc -o ist3NW.yoda
+rivet --analysis MC_TTBAR_SINGLEDECAY ist4-?NW.hepmc -o ist4NW.yoda
+rivet --analysis MC_TTBAR_DOUBLEDECAY ist6-?NW.hepmc -o ist6NW.yoda
 
