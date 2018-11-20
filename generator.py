@@ -27,9 +27,9 @@ class topGenerator (object):
         self.GW = 2.085
         self.MT = 173.21
         self.GT = 2
-        self.Mb = 4.8
-        self.Me = 0.000511
-        self.Mmu = 0.105
+        self.Mb = 0#4.8
+        self.Me = 0#0.000511
+        self.Mmu = 0#0.105
 
     def generate_weight(self,pout):
         term1 = 0
@@ -62,7 +62,7 @@ class topGenerator (object):
         s = MG*tan(r)+M2     
         
         weight = (rmax-rmin)*((s-M2)**2+MG**2)/MG  
-        weight *= np.pi/(rmax-rmin)
+        #weight *= np.pi/(rmax-rmin)
 
         weight /= MG*(tan(rmax) - tan(rmin))
 
