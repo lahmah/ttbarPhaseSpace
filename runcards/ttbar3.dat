@@ -1,8 +1,6 @@
 (run){
   % general settings
   EVENTS 2000;
-  ACUT:=cos(0.3);
-  PTCUT:=5.;
   SHERPA_LDADD SherpaMain;
 
   % model parameters
@@ -14,6 +12,8 @@
   ME_SIGNAL_GENERATOR Amegic;
 
   SCALES VAR{sqr(E_CMS)};  
+  WIDTH[6]=0.0000001
+  %MASS[6]=500
 }(run)
 
 (isr){
@@ -33,16 +33,3 @@
   Decay -6[b] -> -5 -24
   End process;
 }(processes)
-
-
-(selector){
-  PT 1 PTCUT E_CMS;
-  PT -1 PTCUT E_CMS;
-  PT 21 PTCUT E_CMS;
-  Angle 1 -1 -1.0 ACUT;
-  Angle 1 21 -1.0 ACUT;
-  Angle -1 21 -1.0 ACUT;
-  Angle 21 21 -1.0 ACUT;
-}(selector)
-
-

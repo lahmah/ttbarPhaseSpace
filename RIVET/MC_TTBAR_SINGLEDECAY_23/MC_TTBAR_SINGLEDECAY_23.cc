@@ -27,6 +27,17 @@ namespace Rivet {
       _h_pT_t = bookHisto1D("pT_t", 50, 0.0, 600.0);
       _h_pT_b = bookHisto1D("pT_b", 50, 0.0, 600.0);
       _h_pT_W = bookHisto1D("pT_W", 50, 0.0, 600.0);
+
+      _h_px_t = bookHisto1D("px_t", 50, 0.0, 600.0);
+      _h_px_b = bookHisto1D("px_b", 50, 0.0, 600.0);
+      _h_px_W = bookHisto1D("px_W", 50, 0.0, 600.0);
+      _h_py_t = bookHisto1D("py_t", 50, 0.0, 600.0);
+      _h_py_b = bookHisto1D("py_b", 50, 0.0, 600.0);
+      _h_py_W = bookHisto1D("py_W", 50, 0.0, 600.0);
+      _h_pz_t = bookHisto1D("pz_t", 50, 0.0, 600.0);
+      _h_pz_b = bookHisto1D("pz_b", 50, 0.0, 600.0);
+      _h_pz_W = bookHisto1D("pz_W", 50, 0.0, 600.0);
+
       _h_E_t = bookHisto1D("E_t", 50, 0.0, 600.0);
       _h_E_b = bookHisto1D("E_b", 50, 0.0, 600.0);
       _h_E_W = bookHisto1D("E_W", 50, 0.0, 600.0);
@@ -37,12 +48,12 @@ namespace Rivet {
       _h_angle_tW = bookHisto1D("angle_tW", 50, 0, M_PI);
       _h_angle_bW = bookHisto1D("angle_bW", 50, 0, M_PI);
       _h_W_mass = bookHisto1D("W_mass", 50, 0.0, 200.0);
-      _h_t_mass = bookHisto1D("Top_mass", 50, 0.0, 200.0);
-      _h_tr_mass = bookHisto1D("recT_mass", 50, 0.0, 200.0);
+      _h_t_mass = bookHisto1D("Top_mass", 150, 0.0, 1000.0);
+      _h_tr_mass = bookHisto1D("recT_mass",100, 173.205, 173.217);
       _h_phi_t = bookHisto1D("phi_t",50,0, M_PI);
       _h_phi_w = bookHisto1D("phi_w",50,0, M_PI);
       _h_phi_b = bookHisto1D("phi_b",50,0, M_PI);
-      _h_b_mass = bookHisto1D("b_mass", 50, -1, 10);
+      _h_b_mass = bookHisto1D("b_mass", 100, -1, 1);
       _h_angel_labt = bookHisto1D("angel_labt",50,0, M_PI);
       _h_angel_labw = bookHisto1D("angel_labw",50,0, M_PI);
       _h_angel_labb = bookHisto1D("angel_labb",50,0, M_PI);
@@ -66,6 +77,9 @@ namespace Rivet {
       for (const Particle& p : fs.particles()) {
         if (p.pid() == 6) {
           _h_pT_t->fill(p.pT()/GeV, weight);
+          _h_px_t->fill(p.px()/GeV, weight);
+          _h_py_t->fill(p.py()/GeV, weight);
+          _h_pz_t->fill(p.pz()/GeV, weight);
           _h_E_t->fill(p.E()/GeV, weight);
           _h_eta_t->fill(p.eta(), weight);
           _h_t_mass->fill(p.mass()/GeV, weight);
@@ -76,6 +90,10 @@ namespace Rivet {
 	else if (p.pid() == -5) {
           mom_b = p.momentum();
           _h_pT_b->fill(p.pT()/GeV, weight);
+          _h_px_b->fill(p.px()/GeV, weight);
+          _h_py_b->fill(p.py()/GeV, weight);
+          _h_pz_b->fill(p.pz()/GeV, weight);
+
           _h_E_b->fill(p.E()/GeV, weight);
           _h_eta_b->fill(p.eta(), weight);
           _h_phi_b->fill(p.phi(), weight);
@@ -88,6 +106,9 @@ namespace Rivet {
 	else if (p.pid() == -24) {
           mom_W = p.momentum();
           _h_pT_W->fill(p.pT()/GeV, weight);
+          _h_px_W->fill(p.px()/GeV, weight);
+          _h_py_W->fill(p.py()/GeV, weight);
+          _h_pz_W->fill(p.pz()/GeV, weight);
           _h_E_W->fill(p.E()/GeV, weight);
           _h_eta_W->fill(p.eta(), weight);
           _h_W_mass->fill(p.mass()/GeV, weight);
@@ -151,7 +172,16 @@ namespace Rivet {
       normalize(_h_angel_labt);
       normalize(_h_angel_labw);
       normalize(_h_angel_labb);
-
+      normalize(_h_px_t);
+      normalize(_h_px_b);      
+      normalize(_h_px_W);      
+      normalize(_h_py_t);      
+      normalize(_h_py_b);      
+      normalize(_h_py_W);      
+      normalize(_h_pz_t);      
+      normalize(_h_pz_b);      
+      normalize(_h_pz_W);      
+      
     }
 
     //@}
@@ -159,7 +189,7 @@ namespace Rivet {
 
     /// @name Histograms
     //@{
-    Histo1DPtr _h_pT_t, _h_pT_b, _h_pT_W, _h_E_t, _h_E_b, _h_E_W, _h_eta_t, _h_eta_b, _h_eta_W, _h_angle_tb, _h_angle_tW, _h_angle_bW, _h_W_mass, _h_t_mass, _h_tr_mass, _h_phi_t, _h_phi_w, _h_phi_b, _h_b_mass, _h_angel_labt, _h_angel_labw,_h_angel_labb;
+    Histo1DPtr _h_pT_t, _h_pT_b, _h_pT_W, _h_E_t, _h_E_b, _h_E_W, _h_eta_t, _h_eta_b, _h_eta_W, _h_angle_tb, _h_angle_tW, _h_angle_bW, _h_W_mass, _h_t_mass, _h_tr_mass, _h_phi_t, _h_phi_w, _h_phi_b, _h_b_mass, _h_angel_labt, _h_angel_labw,_h_angel_labb , _h_px_t, _h_px_b, _h_px_W ,_h_py_t ,_h_py_b ,_h_py_W ,_h_pz_t ,_h_pz_b ,_h_pz_W ;
     //@}
 
 
