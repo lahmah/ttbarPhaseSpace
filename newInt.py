@@ -52,6 +52,12 @@ if "npr" in sys.argv:
     index = sys.argv.index("npr")
     n_per_run= int(sys.argv[index+1])
 
+if "c" in sys.argv:
+    index = sys.argv.index("c")
+    cexp = float(sys.argv[index+1])
+else:
+    cexp = -1
+
 n_per_run = min(N,n_per_run)
 
 
@@ -99,7 +105,7 @@ Process.SetMomentum(1, E_CM/2, 0., 0., -E_CM/2)
 
 ## Initialize
 
-PSGenerator = topGenerator(nout,E_CM,debug=DEBUG)
+PSGenerator = topGenerator(nout,E_CM,cexp,debug=DEBUG)
 pin1 = Mom4D([E_CM/2, 0., 0., E_CM/2])
 pin2 = Mom4D([E_CM/2, 0., 0., -E_CM/2])
 pin = [pin1, pin2]
