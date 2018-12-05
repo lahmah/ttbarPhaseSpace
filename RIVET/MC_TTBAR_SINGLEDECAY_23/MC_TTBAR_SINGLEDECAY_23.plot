@@ -174,3 +174,76 @@ LogY=1
 RatioPlotMode=deviation
 END PLOT
 
+
+BEGIN PLOT /MC_TTBAR_SINGLEDECAY_23/px_t
+Title=Transverse momentum of top quark
+XLabel=$p_x$
+YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}p_x$
+LogY=1
+RatioPlotMode=deviation
+END PLOT
+
+BEGIN PLOT /MC_TTBAR_SINGLEDECAY_23/px_b
+Title=Transverse momentum of bottom quark
+XLabel=$p_x$
+YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}p_x$
+LogY=1
+RatioPlotMode=deviation
+END PLOT
+
+BEGIN PLOT /MC_TTBAR_SINGLEDECAY_23/px_W
+Title=Transverse momentum of W boson
+XLabel=$p_x$
+YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}p_x$
+LogY=1
+RatioPlotMode=deviation
+END PLOT
+
+BEGIN PLOT /MC_TTBAR_SINGLEDECAY_23/py_t
+Title=Transverse momentum of top quark
+XLabel=$p_y$
+YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}p_y$
+LogY=1
+RatioPlotMode=deviation
+END PLOT
+
+BEGIN PLOT /MC_TTBAR_SINGLEDECAY_23/py_b
+Title=Transverse momentum of bottom quark
+XLabel=$p_y$
+YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}p_y$
+LogY=1
+RatioPlotMode=deviation
+END PLOT
+
+BEGIN PLOT /MC_TTBAR_SINGLEDECAY_23/py_W
+Title=Transverse momentum of W boson
+XLabel=$p_y$
+YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}p_y$
+LogY=1
+RatioPlotMode=deviation
+END PLOT
+
+BEGIN PLOT /MC_TTBAR_SINGLEDECAY_23/pz_t
+Title=Transverse momentum of top quark
+XLabel=$p_z$
+YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}p_z$
+LogY=1
+RatioPlotMode=deviation
+END PLOT
+
+BEGIN PLOT /MC_TTBAR_SINGLEDECAY_23/pz_b
+Title=Transverse momentum of bottom quark
+XLabel=$p_z$
+YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}p_z$
+LogY=1
+RatioPlotMode=deviation
+END PLOT
+
+BEGIN PLOT /MC_TTBAR_SINGLEDECAY_23/pz_W
+Title=Transverse momentum of W boson
+XLabel=$p_z$
+YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}p_z$
+LogY=1
+RatioPlotMode=deviation
+END PLOT
+

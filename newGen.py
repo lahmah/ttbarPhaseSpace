@@ -3,6 +3,7 @@ from numpy import pi, sin, cos, arctan, tan, log, sqrt, array
 from math import gamma
 from functools import partial
 from scipy.optimize import newton
+from vec4d import * 
 
 
 def floorToZero(a,N=0):
@@ -10,7 +11,7 @@ def floorToZero(a,N=0):
     return int(a*10**N)*10**-N
 
 class topGenerator (object):
-    def __init__(self, nout, Ecms, debug = False):
+    def __init__(self, nout, Ecms,cexp, debug = False):
         self.nout = nout
         self.Ecms = Ecms
         self.debug = debug
@@ -19,14 +20,14 @@ class topGenerator (object):
                 * Ecms**(2*nout-4) \
                 /gamma(nout)/gamma(nout-1)
 
-
+        self.cexp = cexp
 
 
         # Particle masses and widths
         self.MW = 80.385
         self.GW = 2.085
         self.MT = 173.21
-        self.GT = 2
+        self.GT = 1e-7#2
         self.Mb = 0#4.8
         self.Me = 0#0.000511
         self.Mmu = 0#0.105
@@ -48,8 +49,9 @@ class topGenerator (object):
             masses[0] = self.MW
             masses[1] = self.Mb
 
-            wb, wb_D_weight = self.decay(ttbar[:,1],masses)
-            #Weight *= wb_D_weight
+            #wb, wb_D_weight = self.decay(ttbar[:,1],masses) 
+            wb, wb_D_weight = self.AnisotropicDecay(ttbar[:,1],masses)
+            Weight *= wb_D_weight
 
             pout = np.append(np.append(wb[:,0,None],ttbar[:,0,None],axis=1),wb[:,1,None],axis=1)
 
@@ -86,7 +88,7 @@ class topGenerator (object):
             masses[0] = self.Mmu
             masses[1] = 0
             munu, munu_D_weight = self.decay(wb2[:,0],masses)
-            Weight *= wb1_D_weight*wb2_D_weight*enu_D_weight*munu_D_weight
+            #Weight *= wb1_D_weight*wb2_D_weight*enu_D_weight*munu_D_weight
 
             pout = np.append(munu[:,1,None],wb2[:,1,None],axis=1)
             pout = np.append(pout,enu[:,1,None],axis=1)
@@ -109,7 +111,10 @@ class topGenerator (object):
 
     
     
-    
+    def pol(self,x):
+        a,b,c,d,e,f,g,h =array([ 3.84394668e+00,  1.02891595e-01, -2.00072368e-04,  2.06424408e-07,-1.21886026e+00,  2.33258055e-11, -2.04040910e-13,  1.08028451e-16])
+        return a+b*x+c*x**2+d*x**3+e*np.sqrt(x)+f*x**4+g*x**5+h*x**6    
+
     def generate_mass(self,mass,gamma,mmax,mmin = 0,size=1):
         if hasattr(mmax, "__len__"):
             size = len(mmax)
@@ -129,8 +134,14 @@ class topGenerator (object):
         #weight *= np.pi/(rmax-rmin)
 
         weight /= MG*(tan(rmax) - tan(rmin))
-#        weight /= np.sqrt(s)/21.5
+        #weight /= np.sqrt(s)
+        #weight *= self.pol(np.sqrt(s)) 
 
+
+        print( min(weight), " - " ,max(weight))
+        print( min(np.sqrt(s)), " - " ,max(np.sqrt(s)))
+        print(Smin)
+        print(Smax)
 
         return np.sqrt(s) , weight
     
@@ -237,7 +248,7 @@ class topGenerator (object):
             s2 = self.mass(p2)**2
             return (S-s1-s2)**2-4*s1*s2
 
-    def decay(self, pint, masses):
+    def nop_decay(self, pint, masses):
         Ecms = self.mass(pint)
         size = len(Ecms)
         momentum = Ecms/2 * (1-np.sum(array(masses)**2,axis=0)/Ecms**2)
@@ -257,8 +268,11 @@ class topGenerator (object):
         momentum = momentum * array([x,y,z])
         p[1:,0] = momentum
         p[1:,1] = -momentum
+
         for i in range(size):
-            rot = self.rotat(pint[:,i],np.array([1,0,0,1]))
+            #rot = self.rotat(pint[:,i],np.array([1,0,0,1]))
+            rot = self.rotat(np.array([1,0,0,1]),pint[:,i])
+
             p[:,0,i] = self.rotat_inv(p[:,0,i],rot)
             p[:,1,i] = self.rotat_inv(p[:,1,i],rot)
         p[:,0] = self.boost(pint,p[:,0])
@@ -266,11 +280,120 @@ class topGenerator (object):
 
         Decay_Weight = np.pi * np.sqrt(self.lamda(pint,p[:,0],p[:,1]))/2/self.mass(pint)**2
         return p, Decay_Weight
-    
+       
+    def sqlamda(self,s,s1,s2):
+        return np.sqrt(((s-s1-s2)**2-4*s1*s2))/s
+
+    def decay(self,pint, masses):
+        Ecms = self.mass(pint)
+        size = len(Ecms)
+
+        s = self.mass(pint)**2  
+        s1 = masses[0]**2
+        s2 = masses[1]**2 
+
+        p = np.empty((4,2,size))
+        p[0,0] = (s+s1-s2)/Ecms/2
+        p1m = Ecms * self.sqlamda(s,s1,s2)/2
+
+        ct  = 2*np.random.random(size)-1
+        st  = sqrt(1-ct**2)
+        phi   = 2*pi*np.random.random(size)
+
+        p[1:,0]=p1m * array([st*sin(phi),st*cos(phi),ct])
+#        for i in range(size): 
+#            rot = self.rotat(np.array([1,0,0,1]),pint[:,i])
+ #           p[:,0,i] = self.rotat_inv(p[:,0,i],rot)
+
+        p[:,0] = self.boost(pint,p[:,0])
+        p[:,1] = pint - p[:,0]
+
+        Decay_Weight = pi*self.sqlamda(s,s1,s2)/2
+        return p, Decay_Weight
+
+    def PeakedDist(self,a, cn, cxm, cxp,k,size):
+        ce = 1-cn
+        res = np.random.rand(size)
+
+        CTZ = np.isclose(0,cn)
+        NCTZ = np.logical_not(CTZ)
+
+        res[CTZ]  = k *( (a+k*cxm)*( (a+k*cxp)/(a+k*cxm))**res[CTZ]  - a)
+        res[NCTZ] = k * ((res[NCTZ]*(a+k*cxp)**ce+(1.-res[NCTZ])*(a+k*cxm)**ce)**(1/ce)-a)
         
-    
+        weight = np.empty(size)
+        weight[CTZ] = log((a+k*cxp)/(a+k*cxm))/k
+        weight[NCTZ] = (a+k*cxp)**ce-(a+k*cxm)**ce
+        return res, 1/weight
+
+    def Poincare(self,v1,v2,v3): 
+        b = v1[1:]  
+        a = v2[1:] 
+
+        ct=np.sum(a*b,axis=0)/np.sqrt(np.sum(a**2,axis=0) * np.sum(b**2,axis=0));
+        n  = np.cross(a,b,axis=0) 
+
+        nsq=np.sum(n**2,axis=0)
+        nabs=sqrt(nsq)
+        ct[ct>1]=1
+        ct[ct<-1]=-1
+
+        st=-sqrt(1.0-ct**2) 
+
+        c=v3[1:]
+        at = n*np.sum(n*c,axis=0)/nsq
+        ap = c-at
+        return np.append(v3[0,None],at+ct*ap+st/nabs*np.cross(n,ap,axis=0),axis=0)
+
+    def AnisotropicDecay(self, pint, masses, ctexp=.8, ctmin=-1, ctmax=1):
+        Ecms = self.mass(pint)
+        s = Ecms**2
+        s1 = masses[0]**2
+        s2 = masses[1]**2
+        
+        ctexp=self.cexp
+
+        size = len(Ecms)
+        
+        p = np.empty((4,2,size))
+        p[0,0] = (s+s1-s2)/Ecms/2.
+
+        p1m = Ecms*self.sqlamda(s,s1,s2)/2
+        pim = sqrt(pint[0]**2-s)
+        a   = pint[0]*p[0,0]/pim/p1m
+        a[np.logical_and(1.>=a,a>=0.)] = 1.0000000001
+        ct, PeakedWeight     = self.PeakedDist(a,ctexp,ctmin,ctmax,1,size)
+        st = sqrt(1.-ct**2)
+        phi = 2.*pi*np.random.rand(size)
+        p[1:,0]=p1m * array([st*sin(phi),st*cos(phi),ct])
+        print(self.mass(p[:,0]))
+  
+        pref = np.empty((4,size))
+        pref[0] = pint[0]
+        pref[1:3] = 0
+        pref[3] = pim
+        
+        ref = np.array([1,0,0,1])
+        p[:,0] = self.Poincare(ref[:,None],pint,p[:,0])
+        p[:,0] = self.boost(pint,p[:,0])
+        #p[:,0] = self.boost(pref,p[:,0])
+        #self.Poincare(pref,pint,p[:,0])
+        
+        p[:,1] = pint - p[:,0]
+        print(self.mass(p[:,0]))
+        print(self.mass(p[:,1]))
+
+        Decay_Weight =  pi*self.sqlamda(s,s1,s2)*4*(a+ct)**-ctexp * PeakedWeight
+
+        return p, Decay_Weight
+
+
+
+
+
+            
     def boost(self, q, ph):
-    #                                      _
+    #
     # Boost of a 4-vector ( relative speed q/q(0) ):
     #
     # ph is the 4-vector in the rest frame of q
@@ -290,7 +413,7 @@ class topGenerator (object):
         return p
     
     def boost_inv(self, q, p):
-    #                                      _
+    #
     # Boost of a 4-vector ( relative speed q/q(0) ):
     #
     # ph is the 4-vector in the rest frame of q
@@ -373,3 +496,4 @@ class topGenerator (object):
         p1[1:] = np.matmul(rot,p2[1:])
     
         return p1
+

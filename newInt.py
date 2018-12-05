@@ -52,6 +52,12 @@ if "npr" in sys.argv:
     index = sys.argv.index("npr")
     n_per_run= int(sys.argv[index+1])
 
+if "c" in sys.argv:
+    index = sys.argv.index("c")
+    cexp = float(sys.argv[index+1])
+else:
+    cexp = -1
+
 n_per_run = min(N,n_per_run)
 
 
@@ -99,7 +105,7 @@ Process.SetMomentum(1, E_CM/2, 0., 0., -E_CM/2)
 
 ## Initialize
 
-PSGenerator = topGenerator(nout,E_CM,debug=DEBUG)
+PSGenerator = topGenerator(nout,E_CM,cexp,debug=DEBUG)
 pin1 = Mom4D([E_CM/2, 0., 0., E_CM/2])
 pin2 = Mom4D([E_CM/2, 0., 0., -E_CM/2])
 pin = [pin1, pin2]
@@ -117,6 +123,8 @@ last_print = 0
 
 ALLP = [] 
 ALLW = []
+ALLWNoM = []
+
 while N_acc<N:
     if N-N_acc < n_per_run:
         n_per_run=N-N_acc
@@ -126,6 +134,10 @@ while N_acc<N:
 
     momenta,weight = PSGenerator.generate_point(n_per_run) 
     ALLW = np.append(ALLW,weight)
+    ALLWNoM = np.append(ALLW,weight)
+
+
+
 
     for i in range(n_per_run):
         temp = []
@@ -178,7 +190,7 @@ ps2 = sumW2 / N_acc
 sigma2W = ps2-ps**2
 errorW = np.sqrt(sigma2W/N_acc)
     
-print('xs: ', xs, "pb  +/- " , sigma_xs , "pb = " , sigma_xs/xs*100,' %')
+print('xs: %e' % xs, "pb  +/- " , sigma_xs , "pb = " , sigma_xs/xs*100,' %')
 print('ps: ', ps, " +/- ", errorW)
 print("generated events:", N_gen)
 print("accepted events", N_acc)
@@ -187,5 +199,7 @@ print('generated nan: ', N_nan)
 
 export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLW,pids, "./"+filename+".hepmc")
 export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), np.ones(len(ALLP)),pids, "./"+filename+"NW.hepmc")
+export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLWNoM,pids, "./"+filename+"NM.hepmc")
 
+#np.save("wbtr",wbtr)
 

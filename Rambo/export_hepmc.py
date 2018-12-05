@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-def export_hepmc(E_CM, data, weights, filename):
+def export_hepmc(E_CM, data, weights, pids, filename):
     n_out = int(data.shape[1]/4)
     
     os.makedirs(os.path.dirname(filename), exist_ok=True)
@@ -30,18 +30,12 @@ def export_hepmc(E_CM, data, weights, filename):
             # outgoing particles
 # 6 -> 5 24 ->       5 -13 14
 # -6 -> -5 -24 ->    -5 11 -12
-            for j in range(n_out):
-                if j == 0:
-                    pid = -24 
-                elif j == 1:
-                    pid = 6
-                elif j == 2:
-                    pid = -5 
+            for j,pid in enumerate(pids):
                
                 E = data[i, 4*j]
                 px = data[i, 4*j+1]
                 py = data[i, 4*j+2]
                 pz = data[i, 4*j+3]
-                f.write("P %i %i %e %e %e %e 0 1 0 0 0 0\n" % (10003+j, pid, px, py, pz, E))
+                f.write("P %i %i %.14e %.14e %.14e %.14e 0 1 0 0 0 0\n" % (10003+j, pid, px, py, pz, E))
             
         f.write("HepMC::IO_GenEvent-END_EVENT_LISTING")

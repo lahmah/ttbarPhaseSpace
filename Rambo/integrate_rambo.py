@@ -16,8 +16,8 @@ nout = 3
 pT_min = 5.
 
 
-TopMass = 175
-WMass   = 80
+TopMass = 173.21
+WMass   = 80.385
 ###############################################
 OUTPUT = str(0)
 

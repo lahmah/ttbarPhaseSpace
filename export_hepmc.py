@@ -36,6 +36,6 @@ def export_hepmc(E_CM, data, weights, pids, filename):
                 px = data[i, 4*j+1]
                 py = data[i, 4*j+2]
                 pz = data[i, 4*j+3]
-                f.write("P %i %i %e %e %e %e 0 1 0 0 0 0\n" % (10003+j, pid, px, py, pz, E))
+                f.write("P %i %i %.14e %.14e %.14e %.14e 0 1 0 0 0 0\n" % (10003+j, pid, px, py, pz, E))
             
         f.write("HepMC::IO_GenEvent-END_EVENT_LISTING")
