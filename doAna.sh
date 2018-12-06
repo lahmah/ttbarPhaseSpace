@@ -19,7 +19,7 @@ do
 
   echo $output
   echo $input
-  rivet --analysis $ANA ${input//\\} -o $output --quiet
+  rivet --analysis $ANA ${input//\\} -o $output --quiet &
 
 done
 
