@@ -12,7 +12,7 @@
   ME_SIGNAL_GENERATOR Amegic;
 
   SCALES VAR{sqr(E_CMS)};  
-  WIDTH[6]=0.0000001
+  %WIDTH[6]=1e-7
   %MASS[6]=500
 }(run)
 

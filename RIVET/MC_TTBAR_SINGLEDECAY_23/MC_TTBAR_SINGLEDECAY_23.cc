@@ -49,7 +49,7 @@ namespace Rivet {
       _h_angle_bW = bookHisto1D("angle_bW", 50, 0, M_PI);
       _h_W_mass = bookHisto1D("W_mass", 50, 0.0, 200.0);
       _h_t_mass = bookHisto1D("Top_mass", 150, 0.0, 1000.0);
-      _h_tr_mass = bookHisto1D("recT_mass",100, 173.205, 173.217);
+      _h_tr_mass = bookHisto1D("recT_mass",100, 0, 1000);
       _h_phi_t = bookHisto1D("phi_t",50,0, M_PI);
       _h_phi_w = bookHisto1D("phi_w",50,0, M_PI);
       _h_phi_b = bookHisto1D("phi_b",50,0, M_PI);
