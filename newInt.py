@@ -198,8 +198,8 @@ print('acceptance rate: ', N_acc/N_gen)
 print('generated nan: ', N_nan)
 
 export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLW,pids, "./"+filename+".hepmc")
-export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), np.ones(len(ALLP)),pids, "./"+filename+"NW.hepmc")
-export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLWNoM,pids, "./"+filename+"NM.hepmc")
+#export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), np.ones(len(ALLP)),pids, "./"+filename+"NW.hepmc")
+#export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLWNoM,pids, "./"+filename+"NM.hepmc")
 
 #np.save("wbtr",wbtr)
 

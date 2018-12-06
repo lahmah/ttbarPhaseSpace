@@ -111,9 +111,9 @@ class topGenerator (object):
 
     
     
-    def pol(self,x):
-        a,b,c,d,e,f,g,h =array([ 3.84394668e+00,  1.02891595e-01, -2.00072368e-04,  2.06424408e-07,-1.21886026e+00,  2.33258055e-11, -2.04040910e-13,  1.08028451e-16])
-        return a+b*x+c*x**2+d*x**3+e*np.sqrt(x)+f*x**4+g*x**5+h*x**6    
+    def pol(self,s):
+        a,b,c,d = array([-1.96289398e-03,  2.16809992e-06, -2.41562755e-12,  1.34717562e+00]) 
+        return a*np.sqrt(s)+b*s+c*s**2+d    
 
     def nop_generate_mass(self,mass,gamma,mmax,mmin = 0,size=1):
         if hasattr(mmax, "__len__"):
@@ -122,8 +122,8 @@ class topGenerator (object):
         Smax = mmax**2
         M2 = mass**2
         MG = mass*gamma
-        rmax = arctan((Smin-M2)/MG)
-        rmin = arctan((Smax-M2)/MG)
+        rmin = arctan((Smin-M2)/MG)
+        rmax = arctan((Smax-M2)/MG)
 
         # generate r
         r = rmin+np.random.random(size)*(rmax-rmin)
@@ -166,8 +166,26 @@ class topGenerator (object):
         wt= (ymin-ymax)*((s-mass2)**2+mw**2)/mw
         wt/=(smax-smin)
         #wt /= np.sqrt(s)
+        wt *=self.pol(s)
 
         return np.sqrt(s), wt
+
+    def nop_generate_mass(self,mass,gamma,mmax,mmin=0,size=1):
+        if hasattr(mmax, "__len__"):
+            size = len(mmax)
+
+        smax = mmax**2
+        smin = mmin**2
+        s = np.random.uniform(smin,smax,size)
+        weight = 1/(smax-smin)
+
+        #m = np.random.uniform(mmin,mmax,size)
+        #s = m**2
+        #weight = 1/(mmax-mmin)
+
+        return np.sqrt(s), weight 
+
+
 
 
 
@@ -257,6 +275,10 @@ class topGenerator (object):
             
             masses[1], BWw2 = self.generate_mass(self.MT,self.GT,Mmax-self.MT,Mmin,size=size)
             BW_weight = BWw2 
+
+            #BW_weight *=(1-masses[1]**2/(Mmax-self.MT)**2)
+            #BW_weight *=(1-self.MW**2/masses[1]**2)
+            #BW_weight /=masses[1]
 
         else: 
             Mmax = self.Ecms
