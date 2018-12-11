@@ -123,7 +123,7 @@ last_print = 0
 
 ALLP = [] 
 ALLW = []
-ALLWNoM = []
+
 
 while N_acc<N:
     if N-N_acc < n_per_run:
@@ -134,7 +134,6 @@ while N_acc<N:
 
     momenta,weight = PSGenerator.generate_point(n_per_run) 
     ALLW = np.append(ALLW,weight)
-    ALLWNoM = np.append(ALLW,weight)
 
 
 
@@ -167,13 +166,21 @@ while N_acc<N:
         sum2 += (weight[i]*me)**2
         sumW += weight[i]
         sumW2 += weight[i]**2
-        ALLW[N_run*n_per_run+i]*=me
+        #ALLW[N_run*n_per_run+i]*=me
+        ALLW[i]*=me
+
         ALLP.append(temp)
 
         
     if N_acc%100 == 0 and N_acc > last_print:
         print('Event', N_acc,end ="\r")
         last_print = N_acc
+    
+    export_hepmc(E_CM, np.array(ALLP).reshape(n_per_run,nout*4), ALLW,pids, "./"+filename+"-"+str(N_run)+".hepmc")
+    ALLP = []
+    ALLW = []
+
+
 
 
 x0 = sum / N_acc
@@ -197,9 +204,4 @@ print("accepted events", N_acc)
 print('acceptance rate: ', N_acc/N_gen)
 print('generated nan: ', N_nan)
 
-export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLW,pids, "./"+filename+".hepmc")
-#export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), np.ones(len(ALLP)),pids, "./"+filename+"NW.hepmc")
-#export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLWNoM,pids, "./"+filename+"NM.hepmc")
-
-#np.save("wbtr",wbtr)
-
+#export_hepmc(E_CM, np.array(ALLP).reshape(N,nout*4), ALLW,pids, "./"+filename+".hepmc")

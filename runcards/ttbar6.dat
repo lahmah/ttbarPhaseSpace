@@ -38,15 +38,3 @@
   End process;
 }(processes)
 
-
-(selector){
-  PT 1 PTCUT E_CMS;
-  PT -1 PTCUT E_CMS;
-  PT 21 PTCUT E_CMS;
-  Angle 1 -1 -1.0 ACUT;
-  Angle 1 21 -1.0 ACUT;
-  Angle -1 21 -1.0 ACUT;
-  Angle 21 21 -1.0 ACUT;
-}(selector)
-
-

@@ -49,7 +49,7 @@ class topGenerator (object):
             masses[0] = self.MW
             masses[1] = self.Mb
 
-            wb, wb_D_weight = self.decay(ttbar[:,1],masses) 
+            wb, wb_D_weight = self.decay(ttbar[:,1],masses,self.MT) 
             #wb, wb_D_weight = self.AnisotropicDecay(ttbar[:,1],masses)
             Weight *= wb_D_weight
 
@@ -61,10 +61,10 @@ class topGenerator (object):
             masses[1] = self.Mb
             Weight *= w1_BW_Weight
 
-            wb, wb_D_weight = self.decay(ttbar[:,1],masses)
+            wb, wb_D_weight = self.decay(ttbar[:,1],masses,self.MT)
             masses[0] = self.Me
             masses[1] = 0
-            enu, enu_D_weight= self.decay(wb[:,0],masses)
+            enu, enu_D_weight= self.decay(wb[:,0],masses,self.MW)
 
             #Weight *= wb_D_weight*enu_D_weight
             pout = np.append(np.append(np.append(enu[:,1,None],ttbar[:,0,None],axis=1),enu[:,0,None],axis=1),wb[:,1,None],axis=1)
@@ -75,19 +75,19 @@ class topGenerator (object):
             Weight *= w1_BW_Weight
             
             
-            wb1, wb1_D_weight = self.decay(ttbar[:,1],masses)
+            wb1, wb1_D_weight = self.decay(ttbar[:,1],masses,self.MT)
             masses[0] = self.Me
             masses[1] = 0
-            enu, enu_D_weight = self.decay(wb1[:,0],masses)
+            enu, enu_D_weight = self.decay(wb1[:,0],masses,self.MW)
 
             masses[0], w2_BW_Weight = self.generate_mass(self.MW,self.GW,self.mass(ttbar[:,0])-self.Mb,self.Mmu)
             masses[1] = self.Mb
             Weight *= w2_BW_Weight
             
-            wb2, wb2_D_weight = self.decay(ttbar[:,0],masses)
+            wb2, wb2_D_weight = self.decay(ttbar[:,0],masses,self.MT)
             masses[0] = self.Mmu
             masses[1] = 0
-            munu, munu_D_weight = self.decay(wb2[:,0],masses)
+            munu, munu_D_weight = self.decay(wb2[:,0],masses,self.MW)
             #Weight *= wb1_D_weight*wb2_D_weight*enu_D_weight*munu_D_weight
 
             pout = np.append(munu[:,1,None],wb2[:,1,None],axis=1)
@@ -112,8 +112,9 @@ class topGenerator (object):
     
     
     def pol(self,s):
-        a,b,c,d = array([-1.96289398e-03,  2.16809992e-06, -2.41562755e-12,  1.34717562e+00]) 
-        return a*np.sqrt(s)+b*s+c*s**2+d    
+        a,b,c = array([0.00100952, 0.07736437, 0.84209604])
+        norm = 1.0034487197948119
+        return  (a*np.sqrt(s)*(1-b*(np.sqrt(s)/self.MT)**2)+c)/norm
 
     def nop_generate_mass(self,mass,gamma,mmax,mmin = 0,size=1):
         if hasattr(mmax, "__len__"):
@@ -166,7 +167,6 @@ class topGenerator (object):
         wt= (ymin-ymax)*((s-mass2)**2+mw**2)/mw
         wt/=(smax-smin)
         #wt /= np.sqrt(s)
-        wt *=self.pol(s)
 
         return np.sqrt(s), wt
 
@@ -275,10 +275,8 @@ class topGenerator (object):
             
             masses[1], BWw2 = self.generate_mass(self.MT,self.GT,Mmax-self.MT,Mmin,size=size)
             BW_weight = BWw2 
+            BW_weight *= self.pol(masses[1])
 
-            #BW_weight *=(1-masses[1]**2/(Mmax-self.MT)**2)
-            #BW_weight *=(1-self.MW**2/masses[1]**2)
-            #BW_weight /=masses[1]
 
         else: 
             Mmax = self.Ecms
@@ -289,9 +287,9 @@ class topGenerator (object):
             BW_weight = BWw1*BWw2 
 
 
-        ttbar = self.generate_k(masses)
-
+        ttbar = self.generate_k(masses) 
         return ttbar , BW_weight
+
 
     def lamda(self,P,p1,p2):
             S  = self.mass(P)**2
@@ -335,7 +333,15 @@ class topGenerator (object):
     def sqlamda(self,s,s1,s2):
         return np.sqrt(((s-s1-s2)**2-4*s1*s2))/s
 
-    def decay(self,pint, masses):
+    def Lambda(self,a,b,c):
+        L = (a-b-c)**2 -4*b*c
+        return sqrt(L)/2/sqrt(a)
+
+    def DecayMassWeight(self,s,sp,b,c):
+        return self.Lambda(sp,b,c)/self.Lambda(s,b,c) *s/sp
+
+
+    def decay(self,pint, masses,m_pin):
         Ecms = self.mass(pint)
         size = len(Ecms)
 
@@ -359,7 +365,10 @@ class topGenerator (object):
         p[:,0] = self.boost(pint,p[:,0])
         p[:,1] = pint - p[:,0]
 
-        Decay_Weight = pi*self.sqlamda(s,s1,s2)/2
+        #Decay_Weight = pi*self.sqlamda(s,s1,s2)/2
+        Decay_Weight = self.DecayMassWeight(m_pin,Ecms,masses[0],masses[1]) 
+        print(np.sum(Decay_Weight)/len(Decay_Weight))
+
         return p, Decay_Weight
 
     def PeakedDist(self,a, cn, cxm, cxp,k,size):
