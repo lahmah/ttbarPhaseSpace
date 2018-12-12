@@ -114,6 +114,7 @@ class topGenerator (object):
     def pol(self,s):
         a,b,c = array([0.00100952, 0.07736437, 0.84209604])
         norm = 1.0034487197948119
+        return 1
         return  (a*np.sqrt(s)*(1-b*(np.sqrt(s)/self.MT)**2)+c)/norm
 
     def nop_generate_mass(self,mass,gamma,mmax,mmin = 0,size=1):
@@ -285,6 +286,11 @@ class topGenerator (object):
             masses[0], BWw1 = self.generate_mass(self.MT,self.GT,Mmax,Mmin+self.Mmu,size=size)
             masses[1], BWw2 = self.generate_mass(self.MT,self.GT,Mmax-masses[0],Mmin+self.Me,size=size)
             BW_weight = BWw1*BWw2 
+            
+            BW_weight *= self.pol(masses[0])
+            BW_weight *= self.pol(masses[1])
+
+
 
 
         ttbar = self.generate_k(masses) 
@@ -366,7 +372,7 @@ class topGenerator (object):
         p[:,1] = pint - p[:,0]
 
         #Decay_Weight = pi*self.sqlamda(s,s1,s2)/2
-        Decay_Weight = self.DecayMassWeight(m_pin,Ecms,masses[0],masses[1]) 
+        Decay_Weight = self.DecayMassWeight(m_pin**2,Ecms**2,masses[0]**2,masses[1]**2) 
         print(np.sum(Decay_Weight)/len(Decay_Weight))
 
         return p, Decay_Weight

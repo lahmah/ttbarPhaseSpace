@@ -98,7 +98,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/eta_b
 Title=Pseudorapidity of bottom quark
 XLabel=$\eta$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}\eta$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -106,7 +106,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/eta_bb
 Title=Pseudorapidity of anti bottom quark
 XLabel=$\eta$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}\eta$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -114,7 +114,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/eta_e
 Title=Pseudorapidity of electron
 XLabel=$\eta$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}\eta$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -122,7 +122,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/eta_nue
 Title=Pseudorapidity of anti electron neutrino
 XLabel=$\eta$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}\eta$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -130,7 +130,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/eta_mu
 Title=Pseudorapidity of anti muon
 XLabel=$\eta$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}\eta$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -138,7 +138,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/eta_numu
 Title=Pseudorapidity of muon neutrino
 XLabel=$\eta$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}\eta$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -146,7 +146,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/angle_bb
 Title=Angle between bottom quark and anti bottom quark
 XLabel=$\alpha$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}\alpha$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -154,7 +154,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/angle_munu
 Title=Angle between anti muon and muon neutrino
 XLabel=$\alpha$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}\alpha$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -162,7 +162,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/angle_enu
 Title=Angle between electron and anti electron neutrino
 XLabel=$\alpha$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}\alpha$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -170,7 +170,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/Wp_mass
 Title=Invariant mass of W+ boson
 XLabel=$M$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}M$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -178,7 +178,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/Wm_mass
 Title=Invariant mass of W- boson
 XLabel=$M$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}M$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -186,7 +186,7 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/t_mass
 Title=Invariant mass of top quark
 XLabel=$M$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}M$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
 
@@ -194,6 +194,6 @@ BEGIN PLOT /MC_TTBAR_DOUBLEDECAY/tb_mass
 Title=Invariant mass of anti top quark
 XLabel=$M$
 YLabel=$1/\sigma \; \mathrm{d}\sigma/\mathrm{d}M$
-LogY=0
+LogY=1
 RatioPlotMode=deviation
 END PLOT
