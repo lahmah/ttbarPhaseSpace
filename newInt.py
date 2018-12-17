@@ -133,7 +133,7 @@ while N_acc<N:
     N_run += 1
 
     momenta,weight = PSGenerator.generate_point(n_per_run) 
-    ALLW = np.append(ALLW,weight)
+    #ALLW = np.append(ALLW,weight)
 
 
 
@@ -167,7 +167,7 @@ while N_acc<N:
         sumW += weight[i]
         sumW2 += weight[i]**2
         #ALLW[N_run*n_per_run+i]*=me
-        ALLW[i]*=me
+        ALLW.append(weight[i]*me)
 
         ALLP.append(temp)
 
@@ -176,7 +176,8 @@ while N_acc<N:
         print('Event', N_acc,end ="\r")
         last_print = N_acc
     
-    export_hepmc(E_CM, np.array(ALLP).reshape(n_per_run,nout*4), ALLW,pids, "./"+filename+"-"+str(N_run)+".hepmc")
+    export_hepmc(E_CM, np.array(ALLP).reshape(len(ALLW),nout*4), np.array(ALLW),pids, "./"+filename+"-"+str(N_run)+".hepmc")
+    
     ALLP = []
     ALLW = []
 

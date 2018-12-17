@@ -4,17 +4,22 @@
   SHERPA_LDADD SherpaMain;
 
   % model parameters
-  HARD_DECAYS Off;
-  MI_HANDLER None;
-  FRAGMENTATION Off;
-  SHOWER_GENERATOR None;
-  PDF_LIBRARY None;
+  HARD_DECAYS=Off;
+  MI_HANDLER=None;
+  FRAGMENTATION=Off;
+  SHOWER_GENERATOR=None;
+  PDF_LIBRARY=None;
+  ME_QED=Off;
+  BEAM_REMNANTS=0;
   ME_SIGNAL_GENERATOR Amegic;
 
   SCALES VAR{sqr(E_CMS)};  
   %WIDTH[6]=1e-7
-  %MASS[6]=500
-}(run)
+  %MASS[24]=1e-7
+  #MASSIVE[24]=0
+  #MASSIVE[5]=1
+  #MASS[5]=80.385
+  }(run)
 
 (isr){
   PDF_LIBRARY None;

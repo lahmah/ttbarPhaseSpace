@@ -66,7 +66,7 @@ class topGenerator (object):
             masses[1] = 0
             enu, enu_D_weight= self.decay(wb[:,0],masses,self.MW)
 
-            #Weight *= wb_D_weight*enu_D_weight
+            Weight *= wb_D_weight*enu_D_weight
             pout = np.append(np.append(np.append(enu[:,1,None],ttbar[:,0,None],axis=1),enu[:,0,None],axis=1),wb[:,1,None],axis=1)
         elif self.nout == 6:
             masses = np.empty((2,size))
@@ -88,7 +88,7 @@ class topGenerator (object):
             masses[0] = self.Mmu
             masses[1] = 0
             munu, munu_D_weight = self.decay(wb2[:,0],masses,self.MW)
-            #Weight *= wb1_D_weight*wb2_D_weight*enu_D_weight*munu_D_weight
+            Weight *= wb1_D_weight*wb2_D_weight*enu_D_weight*munu_D_weight
 
             pout = np.append(munu[:,1,None],wb2[:,1,None],axis=1)
             pout = np.append(pout,enu[:,1,None],axis=1)
@@ -98,24 +98,31 @@ class topGenerator (object):
 
         
         Weight *= self.generate_weight(pout)
+        
 
         return pout, Weight    
     
     def generate_weight(self,pout):
-       #modulus = sqrt(np.sum(pout[1:]**2,axis=0))
-       #term1 = np.sum(modulus/self.Ecms,axis=0)**(2*self.nout-3)
-       #term2 = 1/np.sum(modulus**2/pout[0],axis=0)
-       #term3 = np.prod(modulus / pout[0],axis=0)
-       
-       return self.ps_volume #* term1*term2*term3*self.Ecms 
+        if self.nout == 2:
+            modulus = sqrt(np.sum(pout[1:]**2,axis=0))
+            term1 = np.sum(modulus/self.Ecms,axis=0)**(2*self.nout-3)
+            term2 = 1/np.sum(modulus**2/pout[0],axis=0)
+            term3 = np.prod(modulus / pout[0],axis=0)
+            return self.ps_volume * term1*term2*term3*self.Ecms
+        return self.ps_volume #* term1*term2*term3*self.Ecms 
 
-    
-    
-    def pol(self,s):
-        a,b,c = array([0.00100952, 0.07736437, 0.84209604])
-        norm = 1.0034487197948119
-        return 1
-        return  (a*np.sqrt(s)*(1-b*(np.sqrt(s)/self.MT)**2)+c)/norm
+
+    def pol3(self,s,m,smax):
+        x = sqrt(s)
+        w1 =(2*np.pi)**-2 *(1-(x/m))**2+1
+        w1 = 1/ w1
+        norm1 = np.sum(w1)/len(x)
+        w2 = sqrt(1-s/smax)
+        norm2 = np.sum(w2)/len(x)
+        w = w1*w2
+        norm = norm1 * norm2
+        print("pol norm: ",norm)
+        return w/norm
 
     def nop_generate_mass(self,mass,gamma,mmax,mmin = 0,size=1):
         if hasattr(mmax, "__len__"):
@@ -160,16 +167,23 @@ class topGenerator (object):
         mw = mass*gamma
         smin = mmin**2
         smax = mmax**2
-        ymax=arctan((smin-mass2)/mw)
-        ymin=arctan((smax-mass2)/mw)
+        ymin=arctan((smin-mass2)/mw)
+        ymax=arctan((smax-mass2)/mw)  
         
-        s = mass2+mw*tan(ymin + np.random.rand(size)*(ymax-ymin))
+        r = ymin+np.random.random(size)*(ymax-ymin)
+    
+        s = mass2+mw*tan(r)
 
-        wt= (ymin-ymax)*((s-mass2)**2+mw**2)/mw
+        wt= (ymax-ymin)*((s-mass2)**2+mw**2)/mw
         wt/=(smax-smin)
         #wt /= np.sqrt(s)
 
-        return np.sqrt(s), wt
+        print("BW: Norm: ",np.sum(wt)/size)
+
+        if self.nout == 3:
+            wt*=self.pol3(s,mass,smax)
+
+        return np.sqrt(s), wt#/norm
 
     def nop_generate_mass(self,mass,gamma,mmax,mmin=0,size=1):
         if hasattr(mmax, "__len__"):
@@ -276,7 +290,7 @@ class topGenerator (object):
             
             masses[1], BWw2 = self.generate_mass(self.MT,self.GT,Mmax-self.MT,Mmin,size=size)
             BW_weight = BWw2 
-            BW_weight *= self.pol(masses[1])
+            #BW_weight *= self.pol(masses[1])
 
 
         else: 
@@ -287,14 +301,16 @@ class topGenerator (object):
             masses[1], BWw2 = self.generate_mass(self.MT,self.GT,Mmax-masses[0],Mmin+self.Me,size=size)
             BW_weight = BWw1*BWw2 
             
-            BW_weight *= self.pol(masses[0])
-            BW_weight *= self.pol(masses[1])
+            #BW_weight *= self.pol(masses[0])
+            #BW_weight *= self.pol(masses[1])
 
 
 
 
         ttbar = self.generate_k(masses) 
+        
         return ttbar , BW_weight
+
 
 
     def lamda(self,P,p1,p2):
@@ -357,25 +373,31 @@ class topGenerator (object):
 
         p = np.empty((4,2,size))
         p[0,0] = (s+s1-s2)/Ecms/2
-        p1m = Ecms * self.sqlamda(s,s1,s2)/2
+        p1m = Ecms * self.sqlamda(s,s1,s2)/2  
 
         ct  = 2*np.random.random(size)-1
-        st  = sqrt(1-ct**2)
+        st  = sqrt(1-ct**2) 
         phi   = 2*pi*np.random.random(size)
 
-        p[1:,0]=p1m * array([st*sin(phi),st*cos(phi),ct])
-#        for i in range(size): 
-#            rot = self.rotat(np.array([1,0,0,1]),pint[:,i])
- #           p[:,0,i] = self.rotat_inv(p[:,0,i],rot)
 
+
+        p[1:,0]=p1m * array([st*cos(phi),st*sin(phi),ct]) 
+        #for i in range(size): 
+        #    #rot = self.rotat(np.array([1,0,0,1]),pint[:,i])
+        #    rot = self.rotat(pint[:,i],np.array([1,0,0,1]))
+         #   p[:,0,i] = self.rotat_inv(p[:,0,i],rot)
+
+        #ref = np.array([1,0,0,1])
+        #p[:,0] = self.Poincare(ref[:,None],pint,p[:,0])
         p[:,0] = self.boost(pint,p[:,0])
         p[:,1] = pint - p[:,0]
 
-        #Decay_Weight = pi*self.sqlamda(s,s1,s2)/2
-        Decay_Weight = self.DecayMassWeight(m_pin**2,Ecms**2,masses[0]**2,masses[1]**2) 
-        print(np.sum(Decay_Weight)/len(Decay_Weight))
+        Decay_Weight = pi*self.sqlamda(s,s1,s2)/2
+        #Decay_Weight = self.DecayMassWeight(m_pin**2,Ecms**2,masses[0]**2,masses[1]**2) 
+        norm = np.sum(Decay_Weight)/size
+        print("Decay Norm: ",norm)
 
-        return p, Decay_Weight
+        return p, Decay_Weight/norm
 
     def PeakedDist(self,a, cn, cxm, cxp,k,size):
         ce = 1-cn
@@ -432,22 +454,22 @@ class topGenerator (object):
         st = sqrt(1.-ct**2)
         phi = 2.*pi*np.random.rand(size)
         p[1:,0]=p1m * array([st*sin(phi),st*cos(phi),ct])
-        print(self.mass(p[:,0]))
+        
   
         pref = np.empty((4,size))
         pref[0] = pint[0]
         pref[1:3] = 0
         pref[3] = pim
         
-        ref = np.array([1,0,0,1])
-        p[:,0] = self.Poincare(ref[:,None],pint,p[:,0])
+        #ref = np.array([1,0,0,1])
+        #p[:,0] = self.Poincare(ref[:,None],pint,p[:,0])
         p[:,0] = self.boost(pint,p[:,0])
         #p[:,0] = self.boost(pref,p[:,0])
         #self.Poincare(pref,pint,p[:,0])
         
         p[:,1] = pint - p[:,0]
-        print(self.mass(p[:,0]))
-        print(self.mass(p[:,1]))
+      
+        
 
         Decay_Weight =  (pi*self.sqlamda(s,s1,s2)/4*(a+ct)**ctexp * PeakedWeight)
 

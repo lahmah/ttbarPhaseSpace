@@ -43,6 +43,7 @@ namespace Rivet {
       _h_angle_bnu = bookHisto1D("angle_bnu", 50, 0, M_PI);
       _h_angle_enu = bookHisto1D("angle_enu", 50, 0, M_PI);
       _h_M_enu = bookHisto1D("M_enu", 50, 0.0, 1000.0);
+      _h_M_trec = bookHisto1D("M_trec", 100,0,1000);
     }
 
 
@@ -98,8 +99,9 @@ namespace Rivet {
         _h_angle_tb->fill(mom_t.angle(mom_b), weight);
         _h_angle_te->fill(mom_t.angle(mom_e), weight);
         _h_angle_tnu->fill(mom_t.angle(mom_nu), weight);
+       
       }
-
+      
       const Particles ps = fs.particles();
       // loop over all combinations
       for (unsigned int i=0; i<ps.size(); i++) {
@@ -123,6 +125,15 @@ namespace Rivet {
             _h_angle_enu->fill(ps[i].angle(ps[j]), weight);
 	    FourMomentum sum_enu = ps[i].momentum() + ps[j].momentum();
             _h_M_enu->fill(sum_enu.mass()/GeV, weight);
+            for (unsigned int k=0; k<ps.size(); k++){
+              if ( ps[k].pid()==-5){
+                FourMomentum sum_trec = sum_enu + ps[k].momentum();
+                 _h_M_trec->fill(sum_trec.mass(),weight);
+
+              }
+            
+
+            }
 	  }
 	}
       }
@@ -151,6 +162,7 @@ namespace Rivet {
       normalize(_h_angle_bnu);
       normalize(_h_angle_enu);
       normalize(_h_M_enu);
+      normalize(_h_M_trec);
     }
 
     //@}
@@ -158,7 +170,7 @@ namespace Rivet {
 
     /// @name Histograms
     //@{
-    Histo1DPtr _h_pT_t, _h_pT_b, _h_pT_e, _h_pT_nu, _h_E_t, _h_E_b, _h_E_e, _h_E_nu, _h_eta_t, _h_eta_b, _h_eta_e, _h_eta_nu, _h_angle_tb, _h_angle_te, _h_angle_tnu, _h_angle_be, _h_angle_bnu, _h_angle_enu, _h_M_enu;
+    Histo1DPtr _h_pT_t, _h_pT_b, _h_pT_e, _h_pT_nu, _h_E_t, _h_E_b, _h_E_e, _h_E_nu, _h_eta_t, _h_eta_b, _h_eta_e, _h_eta_nu, _h_angle_tb, _h_angle_te, _h_angle_tnu, _h_angle_be, _h_angle_bnu, _h_angle_enu, _h_M_enu, _h_M_trec;
     //@}
 
 
