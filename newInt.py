@@ -42,6 +42,7 @@ if "nout" in sys.argv:
     index = sys.argv.index("nout")
     nout = int(sys.argv[index+1])
 if "file" in sys.argv:
+    write = True
     index = sys.argv.index("file")
     filename = sys.argv[index+1]
 if "N" in sys.argv:
@@ -175,8 +176,13 @@ while N_acc<N:
     if N_acc%100 == 0 and N_acc > last_print:
         print('Event', N_acc,end ="\r")
         last_print = N_acc
-    
-    export_hepmc(E_CM, np.array(ALLP).reshape(len(ALLW),nout*4), np.array(ALLW),pids, "./"+filename+"-"+str(N_run)+".hepmc")
+
+    if write:
+        if n_per_run != N:
+            part = "-"+str(N_run)
+        else:
+            part = ""
+        export_hepmc(E_CM, np.array(ALLP).reshape(len(ALLW),nout*4), np.array(ALLW),pids, "./"+filename+part+".hepmc")
     
     ALLP = []
     ALLW = []

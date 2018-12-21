@@ -68,6 +68,7 @@ class topGenerator (object):
 
             Weight *= wb_D_weight*enu_D_weight
             pout = np.append(np.append(np.append(enu[:,1,None],ttbar[:,0,None],axis=1),enu[:,0,None],axis=1),wb[:,1,None],axis=1)
+            #Weight /= np.prod(pout[0],axis=0)
         elif self.nout == 6:
             masses = np.empty((2,size))
             masses[0], w1_BW_Weight = self.generate_mass(self.MW,self.GW,self.mass(ttbar[:,1])-self.Mb,self.Me)
@@ -180,8 +181,13 @@ class topGenerator (object):
 
         print("BW: Norm: ",np.sum(wt)/size)
 
-        if self.nout == 3:
+        if self.nout == 3 or mass == self.MT:
             wt*=self.pol3(s,mass,smax)
+
+        if mass == self.MT:
+            wt *= s/mmax**2
+        #if mass == self.MW:
+        #    wt *= np.sqrt(1-s/mmax**2)
 
         return np.sqrt(s), wt#/norm
 
@@ -394,6 +400,7 @@ class topGenerator (object):
 
         Decay_Weight = pi*self.sqlamda(s,s1,s2)/2
         #Decay_Weight = self.DecayMassWeight(m_pin**2,Ecms**2,masses[0]**2,masses[1]**2) 
+   
         norm = np.sum(Decay_Weight)/size
         print("Decay Norm: ",norm)
 
