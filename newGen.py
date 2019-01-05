@@ -181,11 +181,13 @@ class topGenerator (object):
 
         print("BW: Norm: ",np.sum(wt)/size)
 
-        if self.nout == 3 or mass == self.MT:
+        if self.nout == 3:
             wt*=self.pol3(s,mass,smax)
 
-        if mass == self.MT:
-            wt *= s/mmax**2
+        if self.nout == 4 and mass == self.MT:
+            wt *= self.pol3(s,mass,smax)
+            wt *= 4*s/mmax**2
+            print(np.sum(4*s/mmax**2 )/len(s))
         #if mass == self.MW:
         #    wt *= np.sqrt(1-s/mmax**2)
 
@@ -306,6 +308,11 @@ class topGenerator (object):
             masses[0], BWw1 = self.generate_mass(self.MT,self.GT,Mmax,Mmin+self.Mmu,size=size)
             masses[1], BWw2 = self.generate_mass(self.MT,self.GT,Mmax-masses[0],Mmin+self.Me,size=size)
             BW_weight = BWw1*BWw2 
+     
+            BW_weight *= masses[1]**2/(Mmax-masses[0])**2
+            BW_weight *= self.pol3(masses[1]**2,self.MT,(Mmax-masses[0])**2)
+
+
             
             #BW_weight *= self.pol(masses[0])
             #BW_weight *= self.pol(masses[1])

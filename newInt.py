@@ -45,6 +45,8 @@ if "file" in sys.argv:
     write = True
     index = sys.argv.index("file")
     filename = sys.argv[index+1]
+else:
+    write = False
 if "N" in sys.argv:
     index = sys.argv.index("N")
     N = int(sys.argv[index+1])

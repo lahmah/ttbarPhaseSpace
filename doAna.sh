@@ -17,7 +17,7 @@ do
 
   outputs+=($output)
 
-  echo $output
+  #echo $output
   echo $input
   rivet --analysis $ANA ${input//\\} -o $output --quiet & 
 
