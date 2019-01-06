@@ -74,17 +74,22 @@ class topGenerator (object):
             masses[0], w1_BW_Weight = self.generate_mass(self.MW,self.GW,self.mass(ttbar[:,1])-self.Mb,self.Me)
             masses[1] = self.Mb
             Weight *= w1_BW_Weight
-            
+
+            Weight *= (1-masses[0]**2/self.mass(ttbar[:,1])**2)/self.mass(ttbar[:,1])
+           
             
             wb1, wb1_D_weight = self.decay(ttbar[:,1],masses,self.MT)
             masses[0] = self.Me
             masses[1] = 0
             enu, enu_D_weight = self.decay(wb1[:,0],masses,self.MW)
 
+
             masses[0], w2_BW_Weight = self.generate_mass(self.MW,self.GW,self.mass(ttbar[:,0])-self.Mb,self.Mmu)
             masses[1] = self.Mb
             Weight *= w2_BW_Weight
             
+            Weight *=(1-masses[0]**2/self.mass(ttbar[:,0])**2)/self.mass(ttbar[:,0])
+
             wb2, wb2_D_weight = self.decay(ttbar[:,0],masses,self.MT)
             masses[0] = self.Mmu
             masses[1] = 0
@@ -184,7 +189,7 @@ class topGenerator (object):
         if self.nout == 3:
             wt*=self.pol3(s,mass,smax)
 
-        if self.nout == 4 and mass == self.MT:
+        if self.nout == 6 and mass == self.MT:
             wt *= self.pol3(s,mass,smax)
             wt *= 4*s/mmax**2
             print(np.sum(4*s/mmax**2 )/len(s))
@@ -305,13 +310,26 @@ class topGenerator (object):
             Mmax = self.Ecms
             Mmin = self.Mb
             masses = np.empty((2,size))
-            masses[0], BWw1 = self.generate_mass(self.MT,self.GT,Mmax,Mmin+self.Mmu,size=size)
-            masses[1], BWw2 = self.generate_mass(self.MT,self.GT,Mmax-masses[0],Mmin+self.Me,size=size)
+            BWw1 = np.empty(size)
+            BWw2 = np.empty(size)
+            shuffle = np.random.choice([True,False],size)
+            rsize = np.sum(shuffle)
+            masses[0,shuffle], BWw1[shuffle] = self.generate_mass(self.MT,self.GT,Mmax,Mmin+self.Mmu,size=rsize)
+            masses[1,shuffle], BWw2[shuffle] = self.generate_mass(self.MT,self.GT,Mmax-masses[0,shuffle],Mmin+self.Me,size=rsize)
+            
+            shuffle = shuffle==False
+            
+            masses[1,shuffle], BWw2[shuffle] = self.generate_mass(self.MT,self.GT,Mmax,Mmin+self.Me,size=size-rsize)
+            masses[0,shuffle], BWw1[shuffle] = self.generate_mass(self.MT,self.GT,Mmax-masses[1,shuffle],Mmin+self.Mmu,size=size-rsize)
+           
             BW_weight = BWw1*BWw2 
      
-            BW_weight *= masses[1]**2/(Mmax-masses[0])**2
-            BW_weight *= self.pol3(masses[1]**2,self.MT,(Mmax-masses[0])**2)
+            #BW_weight *= masses[1]**2/(Mmax-masses[0])**2
+            #BW_weight *= self.pol3(masses[1]**2,self.MT,(Mmax-masses[0])**2)
+            #BW_weight *= self.pol3(masses[0]**2,self.MT,(Mmax)**2)
 
+
+            #BW_weight *= Mmax**2/masses[0]**2
 
             
             #BW_weight *= self.pol(masses[0])
